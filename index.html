@@ -7,14 +7,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
-      --bg: #03030f;
+      --bg: #05050f;
       --surface: #0c0c18;
       --border: #1e1e2e;
       --accent: #00e5ff;
@@ -24,7 +19,6 @@
       --card: #0a0a14;
       --danger: #ff5e5e;
     }
-
     body {
       background: var(--bg);
       color: var(--text);
@@ -32,7 +26,6 @@
       min-height: 100vh;
       overflow-x: hidden;
     }
-
     canvas {
       position: fixed;
       top: 0;
@@ -41,30 +34,22 @@
       height: 100%;
       pointer-events: none;
       z-index: 0;
-      opacity: 0.05;
+      opacity: 0.045;
     }
-
-    .view {
-      display: none;
-      position: relative;
-      z-index: 1;
-      min-height: 100vh;
-    }
+    .view { display: none; position: relative; z-index: 1; min-height: 100vh; }
     .view.active { display: block; }
-
     nav {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 18px 40px;
       border-bottom: 1px solid var(--border);
-      background: rgba(3,3,15,0.85);
+      background: rgba(5,5,15,0.85);
       backdrop-filter: blur(12px);
       position: sticky;
       top: 0;
       z-index: 100;
     }
-
     .logo {
       font-weight: 800;
       font-size: 1.7rem;
@@ -75,17 +60,9 @@
       -webkit-text-fill-color: transparent;
       cursor: pointer;
     }
-
     .nav-links { display: flex; gap: 28px; align-items: center; }
-    .nav-link {
-      color: var(--muted);
-      font-size: 0.8rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: color 0.2s;
-    }
+    .nav-link { color: var(--muted); font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: color 0.2s; }
     .nav-link:hover { color: var(--text); }
-
     .btn {
       padding: 10px 24px;
       border-radius: 60px;
@@ -95,20 +72,10 @@
       cursor: pointer;
       transition: all 0.2s ease;
     }
-    .btn-ghost {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text);
-    }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
     .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-    .btn-primary {
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #000;
-      font-weight: 700;
-    }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #000; font-weight: 700; }
     .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
-    .btn-danger { background: var(--danger); color: white; }
-
     .hero {
       min-height: calc(100vh - 80px);
       display: flex;
@@ -118,27 +85,10 @@
       text-align: center;
       padding: 60px 24px;
     }
-    .hero-eyebrow {
-      font-size: 0.7rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 24px;
-    }
-    .hero-title {
-      font-size: clamp(2.8rem, 9vw, 5.8rem);
-      font-weight: 800;
-      line-height: 1.1;
-      margin-bottom: 24px;
-    }
+    .hero-eyebrow { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 24px; }
+    .hero-title { font-size: clamp(2.8rem, 9vw, 5.8rem); font-weight: 800; line-height: 1.1; margin-bottom: 24px; }
     .hero-title span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-    .hero-sub {
-      color: var(--muted);
-      font-size: 0.9rem;
-      line-height: 1.6;
-      max-width: 500px;
-      margin-bottom: 48px;
-    }
+    .hero-sub { color: var(--muted); font-size: 0.9rem; line-height: 1.6; max-width: 500px; margin-bottom: 48px; }
     .claim-bar {
       display: flex;
       align-items: center;
@@ -151,17 +101,8 @@
       margin-bottom: 28px;
     }
     .claim-prefix { color: var(--accent); font-size: 0.85rem; font-weight: 500; margin-right: 6px; }
-    .claim-bar input {
-      flex: 1;
-      background: transparent;
-      border: none;
-      outline: none;
-      color: var(--text);
-      font-size: 0.85rem;
-      padding: 12px 0;
-    }
+    .claim-bar input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-size: 0.85rem; padding: 12px 0; }
     .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
-
     .modal-overlay {
       display: none;
       position: fixed;
@@ -210,17 +151,8 @@
     .error-msg.show { display: block; }
     .auth-switch { text-align: center; margin-top: 20px; font-size: 0.75rem; }
     .auth-switch a { color: var(--accent); cursor: pointer; font-weight: 600; }
-
-    .dashboard-layout {
-      display: grid;
-      grid-template-columns: 280px 1fr;
-      min-height: calc(100vh - 72px);
-    }
-    .sidebar {
-      border-right: 1px solid var(--border);
-      padding: 32px 20px;
-      background: rgba(0,0,0,0.2);
-    }
+    .dashboard-layout { display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 72px); }
+    .sidebar { border-right: 1px solid var(--border); padding: 32px 20px; background: rgba(0,0,0,0.2); }
     .sidebar-item {
       padding: 12px 16px;
       border-radius: 14px;
@@ -241,13 +173,7 @@
     .dash-section.active { display: block; }
     .section-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
     .section-sub { color: var(--muted); font-size: 0.8rem; margin-bottom: 32px; }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 28px;
-      padding: 28px;
-      margin-bottom: 28px;
-    }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 28px; padding: 28px; margin-bottom: 28px; }
     .card-title { font-weight: 700; margin-bottom: 20px; font-size: 1.1rem; }
     .profile-url-badge {
       display: flex;
@@ -261,11 +187,7 @@
     }
     .url { font-size: 0.85rem; word-break: break-all; flex: 1; font-family: monospace; }
     .url span { color: var(--accent); font-weight: bold; }
-    .theme-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-      gap: 16px;
-    }
+    .theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 16px; }
     .theme-option {
       border-radius: 20px;
       aspect-ratio: 4/3;
@@ -299,50 +221,14 @@
     }
     .link-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
     .link-url { font-size: 0.7rem; color: var(--muted); word-break: break-all; }
-    .icon-btn {
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 40px;
-      padding: 6px 14px;
-      cursor: pointer;
-      font-size: 0.7rem;
-    }
+    .icon-btn { background: transparent; border: 1px solid var(--border); border-radius: 40px; padding: 6px 14px; cursor: pointer; font-size: 0.7rem; }
     .icon-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
-    #publicProfileView {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 60px 24px;
-      position: relative;
-    }
-    .profile-card {
-      position: relative;
-      z-index: 2;
-      text-align: center;
-      max-width: 500px;
-      width: 100%;
-    }
-    .profile-avatar {
-      width: 110px;
-      height: 110px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 3px solid rgba(255,255,255,0.2);
-      margin: 0 auto 20px;
-    }
+    #publicProfileView { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 24px; position: relative; }
+    .profile-card { position: relative; z-index: 2; text-align: center; max-width: 500px; width: 100%; }
+    .profile-avatar { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(255,255,255,0.2); margin: 0 auto 20px; }
     .profile-avatar-placeholder {
-      width: 110px;
-      height: 110px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      margin: 0 auto 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 3rem;
-      font-weight: 800;
+      width: 110px; height: 110px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2));
+      margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 800;
     }
     .profile-username { font-size: 2rem; font-weight: 800; margin-bottom: 12px; }
     .profile-bio { opacity: 0.8; font-size: 0.9rem; margin-bottom: 32px; }
@@ -356,51 +242,17 @@
       transition: 0.2s;
     }
     .profile-link-btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
-    .powered-by {
-      position: fixed;
-      bottom: 20px;
-      font-size: 0.65rem;
-      color: var(--muted);
-      text-align: center;
-      width: 100%;
-      z-index: 2;
-    }
+    .powered-by { position: fixed; bottom: 20px; font-size: 0.65rem; color: var(--muted); text-align: center; width: 100%; z-index: 2; }
     .loading-overlay {
-      position: fixed;
-      inset: 0;
-      background: #03030f;
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 16px;
-      transition: opacity 0.4s;
+      position: fixed; inset: 0; background: #05050f; z-index: 1000; display: flex;
+      align-items: center; justify-content: center; flex-direction: column; gap: 16px; transition: opacity 0.4s;
     }
-    .loader {
-      width: 44px;
-      height: 44px;
-      border: 2px solid var(--border);
-      border-top: 2px solid var(--accent);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
+    .loader { width: 44px; height: 44px; border: 2px solid var(--border); border-top: 2px solid var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .toast {
-      position: fixed;
-      bottom: 28px;
-      right: 28px;
-      background: #1a1a1a;
-      border-left: 3px solid var(--accent);
-      border-radius: 40px;
-      padding: 12px 24px;
-      font-size: 0.8rem;
-      font-weight: 500;
-      z-index: 1001;
-      transform: translateY(80px);
-      opacity: 0;
-      transition: 0.25s ease;
-      pointer-events: none;
+      position: fixed; bottom: 28px; right: 28px; background: #1a1a1a; border-left: 3px solid var(--accent);
+      border-radius: 40px; padding: 12px 24px; font-size: 0.8rem; font-weight: 500; z-index: 1001;
+      transform: translateY(80px); opacity: 0; transition: 0.25s ease; pointer-events: none;
     }
     .toast.show { transform: translateY(0); opacity: 1; }
     @media (max-width: 760px) {
@@ -413,11 +265,11 @@
   </style>
 </head>
 <body>
-
 <canvas id="bgCanvas"></canvas>
-<div id="loadingOverlay" class="loading-overlay"><div class="loader"></div><span>wsp.lat / loading universe</span></div>
+<div id="loadingOverlay" class="loading-overlay"><div class="loader"></div><span>wsp.lat / loading orbit</span></div>
 <div id="toastMsg" class="toast"></div>
 
+<!-- Auth Modal -->
 <div id="authModal" class="modal-overlay">
   <div class="modal">
     <button style="position:absolute;top:18px;right:22px;background:none;border:none;color:var(--muted);font-size:1.5rem;cursor:pointer;" onclick="closeAuthModal()">✕</button>
@@ -443,28 +295,50 @@
   </div>
 </div>
 
+<!-- HOME VIEW -->
 <div id="homeView" class="view active">
   <nav><div class="logo" onclick="showHome()">wsp.lat</div><div class="nav-links"><span class="nav-link" onclick="openAuthModal('login')">Sign In</span><button class="btn btn-primary" onclick="openAuthModal('register')">Get Started</button></div></nav>
-  <div class="hero"><div class="hero-eyebrow">✦ your link-in-bio, reimagined</div><h1 class="hero-title">Build your <span>corner</span><br>of the web</h1><p class="hero-sub">Create stunning bio pages with custom themes, dynamic links, and a public profile page. Share your wsp.lat/username with the world.</p><div class="claim-bar"><span class="claim-prefix">wsp.lat/</span><input type="text" id="claimInput" placeholder="yourname"><button class="btn btn-primary" onclick="claimFromLanding()">Claim →</button></div><div class="hero-actions"><button class="btn btn-primary" onclick="openAuthModal('register')">Create Your Profile</button><button class="btn btn-ghost" onclick="openAuthModal('login')">Sign In</button></div></div>
+  <div class="hero">
+    <div class="hero-eyebrow">✦ your link-in-bio, reimagined</div>
+    <h1 class="hero-title">Build your <span>corner</span><br>of the web</h1>
+    <p class="hero-sub">Create stunning bio pages with custom themes, dynamic links, and a public profile page. Share your wsp.lat/username with the world.</p>
+    <div class="claim-bar"><span class="claim-prefix">wsp.lat/</span><input type="text" id="claimInput" placeholder="yourname"><button class="btn btn-primary" onclick="claimFromLanding()">Claim →</button></div>
+    <div class="hero-actions"><button class="btn btn-primary" onclick="openAuthModal('register')">Create Your Profile</button><button class="btn btn-ghost" onclick="openAuthModal('login')">Sign In</button></div>
+  </div>
 </div>
 
+<!-- DASHBOARD VIEW -->
 <div id="dashboardView" class="view">
   <nav><div class="logo" onclick="showHome()">wsp.lat</div><div class="nav-links"><span class="nav-link" onclick="viewMyPublicProfile()">↗ View Profile</span><button class="btn btn-ghost" onclick="logout()">Sign Out</button></div></nav>
   <div class="dashboard-layout">
     <div class="sidebar"><div class="sidebar-item active" data-tab="overview">📊 Overview</div><div class="sidebar-item" data-tab="profile">👤 Profile</div><div class="sidebar-item" data-tab="links">🔗 Links</div><div class="sidebar-item" data-tab="appearance">🎨 Appearance</div></div>
     <div class="dash-content">
-      <div class="dash-section active" id="tabOverview"><div class="section-title">Overview</div><div class="section-sub">Your profile at a glance</div><div class="profile-url-badge"><span class="url">wsp.lat/<span id="overviewUsername">username</span></span><button class="btn btn-ghost" onclick="copyProfileUrl()" style="padding:6px 16px;">Copy</button><button class="btn btn-primary" onclick="viewMyPublicProfile()" style="padding:6px 16px;">View →</button></div><div class="card"><div class="card-title">Stats</div><div style="display:flex;gap:32px;text-align:center"><div><div style="font-size:2.2rem;font-weight:800;color:var(--accent)" id="statLinks">0</div><div style="font-size:0.7rem;">links</div></div><div><div style="font-size:2.2rem;font-weight:800">✦</div><div style="font-size:0.7rem;">active</div></div><div><div style="font-size:2.2rem;font-weight:800;color:var(--accent2)" id="statTheme">—</div><div style="font-size:0.7rem;">theme</div></div></div></div></div>
-      <div class="dash-section" id="tabProfile"><div class="section-title">Edit Profile</div><div class="section-sub">Update your display name, bio & avatar</div><div class="card"><div class="form-group"><label>Display Name</label><input type="text" id="editDisplay" placeholder="Your name"></div><div class="form-group"><label>Bio</label><textarea id="editBio" rows="3" placeholder="Tell the world something..."></textarea></div><div class="form-group"><label>Avatar URL</label><input type="url" id="editAvatar" placeholder="https://..."></div><button class="btn btn-primary" onclick="updateProfile()">Save Profile</button></div></div>
-      <div class="dash-section" id="tabLinks"><div class="section-title">My Links</div><div class="section-sub">Add, remove links for your bio page</div><div class="card"><div class="card-title">➕ Add new link</div><div class="form-group"><label>Title</label><input type="text" id="linkTitle" placeholder="Twitter / Portfolio"></div><div class="form-group"><label>URL</label><input type="url" id="linkUrl" placeholder="https://..."></div><button class="btn btn-primary" onclick="addLink()">+ Add Link</button></div><div id="linksContainer"></div></div>
-      <div class="dash-section" id="tabAppearance"><div class="section-title">Appearance</div><div class="section-sub">Choose a vibe for your public page</div><div class="card"><div class="card-title">Theme Library</div><div class="theme-grid" id="themeGrid"></div><button class="btn btn-primary" style="margin-top:24px" onclick="saveTheme()">Save Theme</button></div></div>
+      <div class="dash-section active" id="tabOverview">
+        <div class="section-title">Overview</div><div class="section-sub">Your profile at a glance</div>
+        <div class="profile-url-badge"><span class="url">wsp.lat/<span id="overviewUsername">username</span></span><button class="btn btn-ghost" onclick="copyProfileUrl()" style="padding:6px 16px;">Copy</button><button class="btn btn-primary" onclick="viewMyPublicProfile()" style="padding:6px 16px;">View →</button></div>
+        <div class="card"><div class="card-title">Stats</div><div style="display:flex;gap:32px;text-align:center"><div><div style="font-size:2.2rem;font-weight:800;color:var(--accent)" id="statLinks">0</div><div style="font-size:0.7rem;">links</div></div><div><div style="font-size:2.2rem;font-weight:800">✦</div><div style="font-size:0.7rem;">active</div></div><div><div style="font-size:2.2rem;font-weight:800;color:var(--accent2)" id="statTheme">—</div><div style="font-size:0.7rem;">theme</div></div></div></div>
+      </div>
+      <div class="dash-section" id="tabProfile">
+        <div class="section-title">Edit Profile</div><div class="section-sub">Update your display name, bio & avatar</div>
+        <div class="card"><div class="form-group"><label>Display Name</label><input type="text" id="editDisplay" placeholder="Your name"></div><div class="form-group"><label>Bio</label><textarea id="editBio" rows="3" placeholder="Tell the world something..."></textarea></div><div class="form-group"><label>Avatar URL</label><input type="url" id="editAvatar" placeholder="https://..."></div><button class="btn btn-primary" onclick="updateProfile()">Save Profile</button></div>
+      </div>
+      <div class="dash-section" id="tabLinks">
+        <div class="section-title">My Links</div><div class="section-sub">Add, remove links for your bio page</div>
+        <div class="card"><div class="card-title">➕ Add new link</div><div class="form-group"><label>Title</label><input type="text" id="linkTitle" placeholder="Twitter / Portfolio"></div><div class="form-group"><label>URL</label><input type="url" id="linkUrl" placeholder="https://..."></div><button class="btn btn-primary" onclick="addLink()">+ Add Link</button></div>
+        <div id="linksContainer"></div>
+      </div>
+      <div class="dash-section" id="tabAppearance">
+        <div class="section-title">Appearance</div><div class="section-sub">Choose a vibe for your public page</div>
+        <div class="card"><div class="card-title">Theme Library</div><div class="theme-grid" id="themeGrid"></div><button class="btn btn-primary" style="margin-top:24px" onclick="saveTheme()">Save Theme</button></div>
+      </div>
     </div>
   </div>
 </div>
 
+<!-- PUBLIC PROFILE VIEW -->
 <div id="publicProfileView" class="view"><canvas id="publicRainCanvas"></canvas><div class="profile-card"><div id="pubAvatarWrap"></div><div class="profile-username" id="pubUsername">—</div><div class="profile-bio" id="pubBio"></div><div class="profile-links" id="pubLinks"></div></div><div class="powered-by">powered by <a href="/" onclick="showHome();return false;" style="color:var(--accent);">wsp.lat</a></div></div>
 
 <script>
-  // Supabase configuration
   const SUPABASE_URL = 'https://dyxxpuirsuqtuehvijdf.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_8IaNO6bOuQHZdVyAPeP1Qg_sjjcGcVy';
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -474,7 +348,7 @@
   let selectedThemeKey = 'void';
 
   const THEMES = {
-    void: { bg: '#03030f', text: '#f0f0f0', accent: '#00e5ff', link_bg: '#0c0c18', link_text: '#f0f0f0', name: 'void' },
+    void: { bg: '#05050f', text: '#f0f0f0', accent: '#00e5ff', link_bg: '#0c0c18', link_text: '#f0f0f0', name: 'void' },
     sakura: { bg: '#1a0a12', text: '#ffd6e7', accent: '#ff6bac', link_bg: '#2a1020', link_text: '#ffd6e7', name: 'sakura' },
     forest: { bg: '#0a120a', text: '#c8f0c8', accent: '#4caf50', link_bg: '#0f1f0f', link_text: '#c8f0c8', name: 'forest' },
     ocean: { bg: '#020e1a', text: '#a0d8ef', accent: '#0095ff', link_bg: '#071828', link_text: '#a0d8ef', name: 'ocean' },
@@ -488,40 +362,24 @@
   function showView(id) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(id).classList.add('active'); }
   function showHome() { showView('homeView'); }
 
-  // Rain effect
   function initRain(canvasId) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
     let cols, drops;
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      cols = Math.floor(canvas.width / 30);
-      drops = Array(cols).fill(1);
-    }
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; cols = Math.floor(canvas.width / 30); drops = Array(cols).fill(1); }
+    resizeCanvas(); window.addEventListener('resize', resizeCanvas);
     function draw() {
-      ctx.fillStyle = 'rgba(3,3,15,0.04)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#ccc';
-      ctx.font = '18px monospace';
-      for (let i = 0; i < drops.length; i++) {
-        const char = chars[Math.floor(Math.random() * chars.length)];
-        ctx.fillText(char, i * 30, drops[i] * 22);
-        if (drops[i] * 22 > canvas.height && Math.random() > 0.98) drops[i] = 0;
-        drops[i]++;
-      }
+      ctx.fillStyle = 'rgba(5,5,15,0.04)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#ccc'; ctx.font = '18px monospace';
+      for (let i = 0; i < drops.length; i++) { const char = chars[Math.floor(Math.random() * chars.length)]; ctx.fillText(char, i * 30, drops[i] * 22); if (drops[i] * 22 > canvas.height && Math.random() > 0.98) drops[i] = 0; drops[i]++; }
       requestAnimationFrame(draw);
     }
     draw();
   }
-  initRain('bgCanvas');
-  initRain('publicRainCanvas');
+  initRain('bgCanvas'); initRain('publicRainCanvas');
 
-  // Auth modal
   function closeAuthModal() { document.getElementById('authModal').classList.remove('open'); }
   function openAuthModal(mode) { document.getElementById('authModal').classList.add('open'); if (mode === 'register') showRegisterPanel(); else showLoginPanel(); }
   function showLoginPanel() { document.getElementById('authLoginDiv').style.display = 'block'; document.getElementById('authRegisterDiv').style.display = 'none'; }
@@ -594,12 +452,7 @@
     const links = currentProfile.links || [];
     const container = document.getElementById('linksContainer');
     if (!links.length) { container.innerHTML = '<div class="card" style="text-align:center;color:var(--muted);">✨ No links yet. Add your first link above.</div>'; return; }
-    container.innerHTML = links.map((l, idx) => `
-      <div class="link-item">
-        <div><div class="link-title">${escapeHtml(l.title)}</div><div class="link-url">${escapeHtml(l.url)}</div></div>
-        <button class="icon-btn danger" onclick="removeLink(${idx})">✕ Remove</button>
-      </div>
-    `).join('');
+    container.innerHTML = links.map((l, idx) => `<div class="link-item"><div><div class="link-title">${escapeHtml(l.title)}</div><div class="link-url">${escapeHtml(l.url)}</div></div><button class="icon-btn danger" onclick="removeLink(${idx})">✕ Remove</button></div>`).join('');
     document.getElementById('statLinks').innerText = links.length;
   }
 
@@ -645,8 +498,7 @@
     if (error || !prof) { showHome(); showToast('Profile not found'); return; }
     const theme = THEMES[prof.theme] || THEMES.void;
     const pv = document.getElementById('publicProfileView');
-    pv.style.background = theme.bg;
-    pv.style.color = theme.text;
+    pv.style.background = theme.bg; pv.style.color = theme.text;
     const avatarWrap = document.getElementById('pubAvatarWrap');
     if (prof.avatar_url && prof.avatar_url.startsWith('http')) { avatarWrap.innerHTML = `<img class="profile-avatar" src="${escapeHtml(prof.avatar_url)}" alt="avatar">`; }
     else { const letter = (prof.display_name || prof.username || '?')[0].toUpperCase(); avatarWrap.innerHTML = `<div class="profile-avatar-placeholder" style="background:linear-gradient(135deg,${theme.accent},${theme.accent2})">${letter}</div>`; }
@@ -657,7 +509,7 @@
     showView('publicProfileView');
   }
 
-  function escapeHtml(str) { return String(str || '').replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+  function escapeHtml(str) { return String(str || '').replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
   function claimFromLanding() { const val = document.getElementById('claimInput').value.trim(); if (val) { document.getElementById('regUsername').value = val; openAuthModal('register'); } else showToast('Enter a username'); }
 
   async function routeFromUrl() {
