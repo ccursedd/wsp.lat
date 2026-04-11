@@ -1,526 +1,761 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>wsp.lat — your link in bio</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    :root {
-      --bg: #05050f;
-      --surface: #0c0c18;
-      --border: #1e1e2e;
-      --accent: #00e5ff;
-      --accent2: #aa4aff;
-      --text: #f0f0f0;
-      --muted: #6c6c7e;
-      --card: #0a0a14;
-      --danger: #ff5e5e;
-    }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-    canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 0;
-      opacity: 0.045;
-    }
-    .view { display: none; position: relative; z-index: 1; min-height: 100vh; }
-    .view.active { display: block; }
-    nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 18px 40px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(5,5,15,0.85);
-      backdrop-filter: blur(12px);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .logo {
-      font-weight: 800;
-      font-size: 1.7rem;
-      letter-spacing: -0.02em;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      cursor: pointer;
-    }
-    .nav-links { display: flex; gap: 28px; align-items: center; }
-    .nav-link { color: var(--muted); font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: color 0.2s; }
-    .nav-link:hover { color: var(--text); }
-    .btn {
-      padding: 10px 24px;
-      border-radius: 60px;
-      border: none;
-      font-weight: 600;
-      font-size: 0.8rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
-    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #000; font-weight: 700; }
-    .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
-    .hero {
-      min-height: calc(100vh - 80px);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 60px 24px;
-    }
-    .hero-eyebrow { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 24px; }
-    .hero-title { font-size: clamp(2.8rem, 9vw, 5.8rem); font-weight: 800; line-height: 1.1; margin-bottom: 24px; }
-    .hero-title span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-    .hero-sub { color: var(--muted); font-size: 0.9rem; line-height: 1.6; max-width: 500px; margin-bottom: 48px; }
-    .claim-bar {
-      display: flex;
-      align-items: center;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 60px;
-      padding: 4px 4px 4px 24px;
-      width: 100%;
-      max-width: 460px;
-      margin-bottom: 28px;
-    }
-    .claim-prefix { color: var(--accent); font-size: 0.85rem; font-weight: 500; margin-right: 6px; }
-    .claim-bar input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-size: 0.85rem; padding: 12px 0; }
-    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.92);
-      backdrop-filter: blur(16px);
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-overlay.open { display: flex; }
-    .modal {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 32px;
-      padding: 40px;
-      width: 90%;
-      max-width: 440px;
-      position: relative;
-    }
-    .modal-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
-    .modal-sub { color: var(--muted); font-size: 0.75rem; margin-bottom: 28px; }
-    .form-group { margin-bottom: 20px; }
-    .form-group label { display: block; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
-    .form-group input, .form-group textarea {
-      width: 100%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 12px 16px;
-      color: var(--text);
-      font-size: 0.85rem;
-      outline: none;
-    }
-    .form-group input:focus { border-color: var(--accent); }
-    .error-msg {
-      background: rgba(255,94,94,0.1);
-      border-left: 3px solid var(--danger);
-      border-radius: 12px;
-      padding: 10px 14px;
-      font-size: 0.7rem;
-      color: #ff8a8a;
-      margin-bottom: 18px;
-      display: none;
-    }
-    .error-msg.show { display: block; }
-    .auth-switch { text-align: center; margin-top: 20px; font-size: 0.75rem; }
-    .auth-switch a { color: var(--accent); cursor: pointer; font-weight: 600; }
-    .dashboard-layout { display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 72px); }
-    .sidebar { border-right: 1px solid var(--border); padding: 32px 20px; background: rgba(0,0,0,0.2); }
-    .sidebar-item {
-      padding: 12px 16px;
-      border-radius: 14px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: var(--muted);
-      transition: all 0.15s;
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .sidebar-item:hover { background: var(--surface); color: var(--text); }
-    .sidebar-item.active { background: rgba(0,229,255,0.08); color: var(--accent); border-left: 2px solid var(--accent); }
-    .dash-content { padding: 40px; overflow-y: auto; }
-    .dash-section { display: none; }
-    .dash-section.active { display: block; }
-    .section-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
-    .section-sub { color: var(--muted); font-size: 0.8rem; margin-bottom: 32px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 28px; padding: 28px; margin-bottom: 28px; }
-    .card-title { font-weight: 700; margin-bottom: 20px; font-size: 1.1rem; }
-    .profile-url-badge {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      background: var(--surface);
-      border-radius: 60px;
-      padding: 8px 20px;
-      margin-bottom: 28px;
-      flex-wrap: wrap;
-    }
-    .url { font-size: 0.85rem; word-break: break-all; flex: 1; font-family: monospace; }
-    .url span { color: var(--accent); font-weight: bold; }
-    .theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 16px; }
-    .theme-option {
-      border-radius: 20px;
-      aspect-ratio: 4/3;
-      cursor: pointer;
-      border: 2px solid transparent;
-      transition: transform 0.1s ease;
-      position: relative;
-      overflow: hidden;
-    }
-    .theme-option.selected { border-color: var(--accent); transform: scale(1.02); }
-    .theme-option span {
-      position: absolute;
-      bottom: 8px;
-      left: 0;
-      right: 0;
-      text-align: center;
-      font-size: 0.6rem;
-      font-weight: 700;
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(4px);
-      padding: 4px;
-    }
-    .link-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--surface);
-      border-radius: 20px;
-      padding: 14px 18px;
-      margin-bottom: 10px;
-    }
-    .link-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
-    .link-url { font-size: 0.7rem; color: var(--muted); word-break: break-all; }
-    .icon-btn { background: transparent; border: 1px solid var(--border); border-radius: 40px; padding: 6px 14px; cursor: pointer; font-size: 0.7rem; }
-    .icon-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
-    #publicProfileView { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 24px; position: relative; }
-    .profile-card { position: relative; z-index: 2; text-align: center; max-width: 500px; width: 100%; }
-    .profile-avatar { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(255,255,255,0.2); margin: 0 auto 20px; }
-    .profile-avatar-placeholder {
-      width: 110px; height: 110px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2));
-      margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 800;
-    }
-    .profile-username { font-size: 2rem; font-weight: 800; margin-bottom: 12px; }
-    .profile-bio { opacity: 0.8; font-size: 0.9rem; margin-bottom: 32px; }
-    .profile-links { display: flex; flex-direction: column; gap: 12px; width: 100%; }
-    .profile-link-btn {
-      padding: 14px 20px;
-      border-radius: 60px;
-      text-decoration: none;
-      font-size: 0.9rem;
-      font-weight: 600;
-      transition: 0.2s;
-    }
-    .profile-link-btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
-    .powered-by { position: fixed; bottom: 20px; font-size: 0.65rem; color: var(--muted); text-align: center; width: 100%; z-index: 2; }
-    .loading-overlay {
-      position: fixed; inset: 0; background: #05050f; z-index: 1000; display: flex;
-      align-items: center; justify-content: center; flex-direction: column; gap: 16px; transition: opacity 0.4s;
-    }
-    .loader { width: 44px; height: 44px; border: 2px solid var(--border); border-top: 2px solid var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .toast {
-      position: fixed; bottom: 28px; right: 28px; background: #1a1a1a; border-left: 3px solid var(--accent);
-      border-radius: 40px; padding: 12px 24px; font-size: 0.8rem; font-weight: 500; z-index: 1001;
-      transform: translateY(80px); opacity: 0; transition: 0.25s ease; pointer-events: none;
-    }
-    .toast.show { transform: translateY(0); opacity: 1; }
-    @media (max-width: 760px) {
-      .dashboard-layout { grid-template-columns: 1fr; }
-      .sidebar { display: flex; flex-wrap: wrap; gap: 8px; border-right: none; border-bottom: 1px solid var(--border); padding: 16px; }
-      .sidebar-item { width: auto; }
-      nav { padding: 14px 20px; }
-      .dash-content { padding: 24px; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>wsp.lat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060606;--bg2:#0d0d0d;--bg3:#141414;
+  --border:#1e1e1e;--border2:#2a2a2a;
+  --accent:#c8ff00;--accent-dim:rgba(200,255,0,0.08);
+  --text:#efefef;--text2:#888;--text3:#444;
+  --danger:#ff4444;--radius:10px;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+
+/* rain canvas */
+#rain{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.05}
+
+/* pages */
+.page{display:none;min-height:100vh;position:relative;z-index:1}
+.page.show{display:flex;flex-direction:column}
+
+/* toast */
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg3);border:1px solid var(--border2);padding:10px 22px;border-radius:50px;font-size:13px;color:var(--text2);opacity:0;transition:all .3s;z-index:9999;white-space:nowrap;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* loader */
+#loader{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9998;transition:opacity .4s}
+#loader.gone{opacity:0;pointer-events:none}
+.spin{width:32px;height:32px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 22px;border-radius:50px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-accent{background:var(--accent);color:#000;font-weight:700}
+.btn-accent:hover{background:#d4ff1a;transform:translateY(-1px)}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+.btn-ghost:hover{border-color:var(--text3);color:var(--text)}
+.btn-red{background:rgba(255,68,68,.12);border:1px solid rgba(255,68,68,.25);color:var(--danger)}
+.btn-red:hover{background:rgba(255,68,68,.22)}
+.btn-sm{padding:7px 16px;font-size:12px}
+.btn-full{width:100%;border-radius:var(--radius)}
+.btn:disabled{opacity:.4;pointer-events:none}
+
+/* ── FIELD ── */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:7px}
+.field input,.field textarea,.field select{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
+.field textarea{resize:vertical;min-height:80px}
+.field select{appearance:none;cursor:pointer}
+.field select option{background:var(--bg3)}
+
+/* ── MODAL ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(12px);z-index:500;align-items:center;justify-content:center;padding:20px}
+.overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:36px;width:100%;max-width:400px;position:relative;animation:mIn .25s ease}
+@keyframes mIn{from{opacity:0;transform:scale(.96) translateY(10px)}}
+.modal-x{position:absolute;top:14px;right:16px;background:transparent;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px;line-height:1}
+.modal-x:hover{color:var(--text)}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.04em;margin-bottom:4px}
+.modal-sub{color:var(--text2);font-size:13px;margin-bottom:28px}
+.err-box{background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.25);border-radius:8px;padding:10px 14px;color:var(--danger);font-size:13px;margin-bottom:14px;display:none}
+.err-box.show{display:block}
+.auth-foot{text-align:center;margin-top:14px;font-size:13px;color:var(--text2)}
+.auth-foot span{color:var(--accent);cursor:pointer}
+.auth-foot span:hover{text-decoration:underline}
+
+/* ════════════════
+   LANDING
+════════════════ */
+#page-home{align-items:center;justify-content:center;text-align:center;padding:80px 20px 40px}
+.home-nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:18px 36px;border-bottom:1px solid var(--border);background:rgba(6,6,6,.88);backdrop-filter:blur(14px);z-index:100}
+.wordmark{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:.05em;color:var(--accent);cursor:pointer}
+.nav-right{display:flex;gap:10px;align-items:center}
+.hero-wrap{max-width:620px}
+.hero-tag{display:inline-block;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(200,255,0,.25);padding:5px 14px;border-radius:50px;margin-bottom:32px}
+.hero-h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(4.5rem,12vw,9rem);line-height:.94;letter-spacing:.02em;margin-bottom:22px}
+.hero-h1 em{color:var(--accent);font-style:normal}
+.hero-sub{color:var(--text2);font-size:15px;line-height:1.7;max-width:430px;margin:0 auto 40px}
+.claim-row{display:flex;align-items:center;background:var(--bg2);border:1px solid var(--border2);border-radius:50px;padding:5px 5px 5px 18px;max-width:420px;margin:0 auto 20px;gap:6px}
+.claim-row .pre{color:var(--text3);font-size:14px;white-space:nowrap}
+.claim-row input{flex:1;min-width:0;background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px}
+.claim-row input::placeholder{color:var(--text3)}
+.hero-cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+/* ════════════════
+   DASHBOARD
+════════════════ */
+#page-dash{flex-direction:column}
+.dash-nav{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:100;flex-shrink:0}
+.dash-body{display:grid;grid-template-columns:220px 1fr;flex:1;min-height:0}
+.sidebar{border-right:1px solid var(--border);padding:24px 12px;display:flex;flex-direction:column;gap:2px}
+.sb-label{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--text3);padding:12px 12px 6px}
+.sb-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .15s;border:1px solid transparent}
+.sb-item:hover{background:var(--bg2);color:var(--text)}
+.sb-item.on{background:var(--accent-dim);color:var(--accent);border-color:rgba(200,255,0,.15)}
+.sb-item .ico{font-size:15px;width:20px;text-align:center}
+.main{padding:40px 48px;overflow-y:auto;max-height:calc(100vh - 57px)}
+.tab{display:none}
+.tab.on{display:block}
+.tab-title{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:.04em;margin-bottom:4px}
+.tab-sub{color:var(--text2);font-size:13px;margin-bottom:32px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:18px}
+.card-head{font-weight:700;font-size:13px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between}
+.url-pill{display:flex;align-items:center;gap:12px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:13px 16px;margin-bottom:20px}
+.url-pill .url-text{flex:1;font-size:14px}
+.url-pill .url-text b{color:var(--accent)}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.stat-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:18px;text-align:center}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:2.4rem;color:var(--accent);letter-spacing:.03em;line-height:1}
+.stat-lbl{font-size:11px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-top:4px}
+.link-row{display:flex;align-items:center;gap:12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;animation:fIn .2s ease}
+@keyframes fIn{from{opacity:0;transform:translateY(4px)}}
+.link-row .lr-info{flex:1;min-width:0}
+.link-row .lr-title{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.link-row .lr-url{font-size:12px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.link-row .lr-btns{display:flex;gap:6px;flex-shrink:0}
+.empty-state{text-align:center;padding:36px;color:var(--text3);font-size:13px}
+.theme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.theme-tile{border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid var(--border);transition:all .2s;position:relative;aspect-ratio:3/2}
+.theme-tile.picked{border-color:var(--accent)}
+.theme-tile .tname{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.65);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;color:#fff}
+.theme-preview{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}
+.tp-circle{width:24px;height:24px;border-radius:50%}
+.tp-line{height:3px;border-radius:3px;width:60%}
+.color-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.color-field label{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer}
+.color-field input[type=color]{width:28px;height:28px;border:1px solid var(--border2);border-radius:6px;padding:2px;cursor:pointer;background:var(--bg3)}
+.avatar-preview{width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--border2);background:var(--bg3);display:block;margin:0 auto 12px}
+.avatar-initials{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.8rem;margin:0 auto 12px}
+
+/* ════════════════
+   PUBLIC PROFILE
+════════════════ */
+#page-profile{align-items:center;justify-content:center;padding:60px 20px 80px;min-height:100vh;position:relative}
+.prof-wrap{position:relative;z-index:2;width:100%;max-width:400px;text-align:center;animation:pIn .5s ease}
+@keyframes pIn{from{opacity:0;transform:translateY(18px)}}
+.prof-avatar{width:90px;height:90px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 16px;border:2px solid rgba(255,255,255,.1)}
+.prof-initials{width:90px;height:90px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:2.2rem;margin:0 auto 16px;border:2px solid rgba(255,255,255,.08)}
+.prof-name{font-family:'Bebas Neue',sans-serif;font-size:2.6rem;letter-spacing:.04em;line-height:1;margin-bottom:8px}
+.prof-bio{font-size:13px;line-height:1.7;opacity:.6;margin-bottom:32px;max-width:300px;margin-left:auto;margin-right:auto}
+.prof-links{display:flex;flex-direction:column;gap:10px;width:100%;margin-bottom:32px}
+.prof-link{display:block;padding:14px 20px;border-radius:12px;font-size:14px;font-weight:500;text-align:center;border:1px solid rgba(255,255,255,.06);transition:transform .2s,opacity .2s}
+.prof-link:hover{transform:translateY(-2px);opacity:.85}
+.prof-no-links{font-size:13px;opacity:.3}
+.prof-badge{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);font-size:11px;color:rgba(255,255,255,.18);letter-spacing:.06em}
+.prof-badge a{color:inherit}
+.prof-badge a:hover{color:rgba(255,255,255,.4)}
+
+/* ── un-wrap inline ── */
+.un-row{display:flex;align-items:center;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;overflow:hidden;transition:border-color .2s;width:100%}
+.un-row:focus-within{border-color:var(--accent)}
+.un-row .un-pre{color:var(--text3);padding:11px 0 11px 14px;font-size:14px;white-space:nowrap}
+.un-row input{flex:1;background:transparent;border:none;outline:none;color:var(--text);padding:11px 14px 11px 2px;font-family:'DM Sans',sans-serif;font-size:14px}
+
+@media(max-width:700px){
+  .dash-body{grid-template-columns:1fr}
+  .sidebar{flex-direction:row;flex-wrap:wrap;padding:10px;border-right:none;border-bottom:1px solid var(--border)}
+  .sb-label{display:none}
+  .main{padding:20px;max-height:unset}
+  .home-nav,.dash-nav{padding:14px 18px}
+  .stats-row{grid-template-columns:1fr 1fr}
+}
+</style>
 </head>
 <body>
-<canvas id="bgCanvas"></canvas>
-<div id="loadingOverlay" class="loading-overlay"><div class="loader"></div><span>wsp.lat / loading orbit</span></div>
-<div id="toastMsg" class="toast"></div>
 
-<!-- Auth Modal -->
-<div id="authModal" class="modal-overlay">
+<canvas id="rain"></canvas>
+<div id="loader"><div class="spin"></div></div>
+<div id="toast"></div>
+
+<!-- ════ AUTH MODAL ════ -->
+<div class="overlay" id="auth-modal">
   <div class="modal">
-    <button style="position:absolute;top:18px;right:22px;background:none;border:none;color:var(--muted);font-size:1.5rem;cursor:pointer;" onclick="closeAuthModal()">✕</button>
-    <div id="authLoginDiv">
-      <div class="modal-title">sign in</div>
+    <button class="modal-x" onclick="closeAuth()">✕</button>
+    <div id="view-login">
+      <div class="modal-title">SIGN IN</div>
       <div class="modal-sub">welcome back to wsp.lat</div>
-      <div class="error-msg" id="loginError"></div>
-      <div class="form-group"><label>email</label><input type="email" id="loginEmail" placeholder="you@example.com"></div>
-      <div class="form-group"><label>password</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
-      <button class="btn btn-primary" style="width:100%;" onclick="doLogin()">sign in →</button>
-      <div class="auth-switch">no account? <a onclick="showRegisterPanel()">create one</a></div>
+      <div class="err-box" id="lerr"></div>
+      <div class="field"><label>Email</label><input id="l-email" type="email" placeholder="you@email.com"></div>
+      <div class="field"><label>Password</label><input id="l-pw" type="password" placeholder="••••••••"></div>
+      <button class="btn btn-accent btn-full" style="margin-top:6px" onclick="doLogin()">Sign In</button>
+      <div class="auth-foot">no account? <span onclick="swapAuth('reg')">create one</span></div>
     </div>
-    <div id="authRegisterDiv" style="display:none">
-      <div class="modal-title">create account</div>
+    <div id="view-reg" style="display:none">
+      <div class="modal-title">JOIN</div>
       <div class="modal-sub">claim your wsp.lat/username</div>
-      <div class="error-msg" id="registerError"></div>
-      <div class="form-group"><label>username (your url)</label><input type="text" id="regUsername" placeholder="soul" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')"></div>
-      <div class="form-group"><label>email</label><input type="email" id="regEmail"></div>
-      <div class="form-group"><label>password (min 6)</label><input type="password" id="regPassword"></div>
-      <button class="btn btn-primary" style="width:100%;" onclick="doRegister()">create →</button>
-      <div class="auth-switch">already have an account? <a onclick="showLoginPanel()">sign in</a></div>
+      <div class="err-box" id="rerr"></div>
+      <div class="field">
+        <label>Username — your URL</label>
+        <div class="un-row">
+          <span class="un-pre">wsp.lat/</span>
+          <input id="r-user" type="text" placeholder="yourname" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_.]/g,'')">
+        </div>
+      </div>
+      <div class="field"><label>Email</label><input id="r-email" type="email" placeholder="you@email.com"></div>
+      <div class="field"><label>Password</label><input id="r-pw" type="password" placeholder="min 6 chars"></div>
+      <button class="btn btn-accent btn-full" style="margin-top:6px" onclick="doRegister()">Create Account</button>
+      <div class="auth-foot">have an account? <span onclick="swapAuth('login')">sign in</span></div>
     </div>
   </div>
 </div>
 
-<!-- HOME VIEW -->
-<div id="homeView" class="view active">
-  <nav><div class="logo" onclick="showHome()">wsp.lat</div><div class="nav-links"><span class="nav-link" onclick="openAuthModal('login')">Sign In</span><button class="btn btn-primary" onclick="openAuthModal('register')">Get Started</button></div></nav>
-  <div class="hero">
-    <div class="hero-eyebrow">✦ your link-in-bio, reimagined</div>
-    <h1 class="hero-title">Build your <span>corner</span><br>of the web</h1>
-    <p class="hero-sub">Create stunning bio pages with custom themes, dynamic links, and a public profile page. Share your wsp.lat/username with the world.</p>
-    <div class="claim-bar"><span class="claim-prefix">wsp.lat/</span><input type="text" id="claimInput" placeholder="yourname"><button class="btn btn-primary" onclick="claimFromLanding()">Claim →</button></div>
-    <div class="hero-actions"><button class="btn btn-primary" onclick="openAuthModal('register')">Create Your Profile</button><button class="btn btn-ghost" onclick="openAuthModal('login')">Sign In</button></div>
+<!-- ════ ADD LINK MODAL ════ -->
+<div class="overlay" id="link-modal">
+  <div class="modal">
+    <button class="modal-x" onclick="closeLinkModal()">✕</button>
+    <div class="modal-title">ADD LINK</div>
+    <div class="modal-sub">add a link to your profile</div>
+    <div class="err-box" id="link-err"></div>
+    <div class="field"><label>Title</label><input id="lnk-title" type="text" placeholder="My Twitter"></div>
+    <div class="field"><label>URL</label><input id="lnk-url" type="url" placeholder="https://..."></div>
+    <button class="btn btn-accent btn-full" style="margin-top:6px" onclick="confirmAddLink()">Add Link</button>
   </div>
 </div>
 
-<!-- DASHBOARD VIEW -->
-<div id="dashboardView" class="view">
-  <nav><div class="logo" onclick="showHome()">wsp.lat</div><div class="nav-links"><span class="nav-link" onclick="viewMyPublicProfile()">↗ View Profile</span><button class="btn btn-ghost" onclick="logout()">Sign Out</button></div></nav>
-  <div class="dashboard-layout">
-    <div class="sidebar"><div class="sidebar-item active" data-tab="overview">📊 Overview</div><div class="sidebar-item" data-tab="profile">👤 Profile</div><div class="sidebar-item" data-tab="links">🔗 Links</div><div class="sidebar-item" data-tab="appearance">🎨 Appearance</div></div>
-    <div class="dash-content">
-      <div class="dash-section active" id="tabOverview">
-        <div class="section-title">Overview</div><div class="section-sub">Your profile at a glance</div>
-        <div class="profile-url-badge"><span class="url">wsp.lat/<span id="overviewUsername">username</span></span><button class="btn btn-ghost" onclick="copyProfileUrl()" style="padding:6px 16px;">Copy</button><button class="btn btn-primary" onclick="viewMyPublicProfile()" style="padding:6px 16px;">View →</button></div>
-        <div class="card"><div class="card-title">Stats</div><div style="display:flex;gap:32px;text-align:center"><div><div style="font-size:2.2rem;font-weight:800;color:var(--accent)" id="statLinks">0</div><div style="font-size:0.7rem;">links</div></div><div><div style="font-size:2.2rem;font-weight:800">✦</div><div style="font-size:0.7rem;">active</div></div><div><div style="font-size:2.2rem;font-weight:800;color:var(--accent2)" id="statTheme">—</div><div style="font-size:0.7rem;">theme</div></div></div></div>
-      </div>
-      <div class="dash-section" id="tabProfile">
-        <div class="section-title">Edit Profile</div><div class="section-sub">Update your display name, bio & avatar</div>
-        <div class="card"><div class="form-group"><label>Display Name</label><input type="text" id="editDisplay" placeholder="Your name"></div><div class="form-group"><label>Bio</label><textarea id="editBio" rows="3" placeholder="Tell the world something..."></textarea></div><div class="form-group"><label>Avatar URL</label><input type="url" id="editAvatar" placeholder="https://..."></div><button class="btn btn-primary" onclick="updateProfile()">Save Profile</button></div>
-      </div>
-      <div class="dash-section" id="tabLinks">
-        <div class="section-title">My Links</div><div class="section-sub">Add, remove links for your bio page</div>
-        <div class="card"><div class="card-title">➕ Add new link</div><div class="form-group"><label>Title</label><input type="text" id="linkTitle" placeholder="Twitter / Portfolio"></div><div class="form-group"><label>URL</label><input type="url" id="linkUrl" placeholder="https://..."></div><button class="btn btn-primary" onclick="addLink()">+ Add Link</button></div>
-        <div id="linksContainer"></div>
-      </div>
-      <div class="dash-section" id="tabAppearance">
-        <div class="section-title">Appearance</div><div class="section-sub">Choose a vibe for your public page</div>
-        <div class="card"><div class="card-title">Theme Library</div><div class="theme-grid" id="themeGrid"></div><button class="btn btn-primary" style="margin-top:24px" onclick="saveTheme()">Save Theme</button></div>
-      </div>
+<!-- ════ LANDING ════ -->
+<div class="page" id="page-home">
+  <nav class="home-nav">
+    <div class="wordmark">WSP.LAT</div>
+    <div class="nav-right">
+      <button class="btn btn-ghost btn-sm" onclick="openAuth('login')">Sign In</button>
+      <button class="btn btn-accent btn-sm" onclick="openAuth('reg')">Get Started</button>
+    </div>
+  </nav>
+  <div class="hero-wrap">
+    <div class="hero-tag">✦ your link-in-bio</div>
+    <h1 class="hero-h1">YOUR<br><em>PAGE.</em><br>YOUR WAY.</h1>
+    <p class="hero-sub">One link for everything you are. Custom themes, your links, your vibe — live at wsp.lat/you.</p>
+    <div class="claim-row">
+      <span class="pre">wsp.lat/</span>
+      <input id="claim-in" type="text" placeholder="yourname" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_.]/g,'')">
+      <button class="btn btn-accent btn-sm" onclick="claimIt()">Claim →</button>
+    </div>
+    <div class="hero-cta">
+      <button class="btn btn-accent" onclick="openAuth('reg')">Create Your Profile</button>
+      <button class="btn btn-ghost" onclick="openAuth('login')">Sign In</button>
     </div>
   </div>
 </div>
 
-<!-- PUBLIC PROFILE VIEW -->
-<div id="publicProfileView" class="view"><canvas id="publicRainCanvas"></canvas><div class="profile-card"><div id="pubAvatarWrap"></div><div class="profile-username" id="pubUsername">—</div><div class="profile-bio" id="pubBio"></div><div class="profile-links" id="pubLinks"></div></div><div class="powered-by">powered by <a href="/" onclick="showHome();return false;" style="color:var(--accent);">wsp.lat</a></div></div>
+<!-- ════ DASHBOARD ════ -->
+<div class="page" id="page-dash">
+  <nav class="dash-nav">
+    <div class="wordmark">WSP.LAT</div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="btn btn-ghost btn-sm" onclick="viewMyProfile()">↗ View Profile</button>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign Out</button>
+    </div>
+  </nav>
+  <div class="dash-body">
+    <div class="sidebar">
+      <div class="sb-label">Menu</div>
+      <div class="sb-item on" onclick="showTab(this,'overview')"><span class="ico">⚡</span>Overview</div>
+      <div class="sb-item" onclick="showTab(this,'profile')"><span class="ico">👤</span>Profile</div>
+      <div class="sb-item" onclick="showTab(this,'links')"><span class="ico">🔗</span>Links</div>
+      <div class="sb-item" onclick="showTab(this,'appear')"><span class="ico">🎨</span>Appearance</div>
+    </div>
+    <div class="main">
+
+      <!-- overview -->
+      <div class="tab on" id="tab-overview">
+        <div class="tab-title">OVERVIEW</div>
+        <div class="tab-sub">your profile at a glance</div>
+        <div class="url-pill">
+          <span class="url-text">wsp.lat/<b id="ov-slug">—</b></span>
+          <button class="btn btn-ghost btn-sm" onclick="copyUrl()">Copy</button>
+          <button class="btn btn-accent btn-sm" onclick="viewMyProfile()">Open →</button>
+        </div>
+        <div class="stats-row">
+          <div class="stat-box"><div class="stat-num" id="ov-links">0</div><div class="stat-lbl">Links</div></div>
+          <div class="stat-box"><div class="stat-num" style="color:var(--text)">✓</div><div class="stat-lbl">Active</div></div>
+          <div class="stat-box"><div class="stat-num" id="ov-theme" style="font-size:1.1rem;color:var(--text2)">lime</div><div class="stat-lbl">Theme</div></div>
+        </div>
+      </div>
+
+      <!-- profile -->
+      <div class="tab" id="tab-profile">
+        <div class="tab-title">PROFILE</div>
+        <div class="tab-sub">what people see on your page</div>
+        <div class="card">
+          <div id="av-preview" style="margin-bottom:8px"></div>
+          <div class="field"><label>Display Name</label><input id="p-name" type="text" placeholder="Your Name" oninput="refreshAvPrev()"></div>
+          <div class="field"><label>Bio</label><textarea id="p-bio" placeholder="tell the world what's up..."></textarea></div>
+          <div class="field"><label>Avatar Image URL <span style="color:var(--text3)">(optional)</span></label><input id="p-avatar" type="url" placeholder="https://i.imgur.com/..." oninput="refreshAvPrev()"></div>
+          <button class="btn btn-accent" onclick="saveProfile()">Save Profile</button>
+        </div>
+      </div>
+
+      <!-- links -->
+      <div class="tab" id="tab-links">
+        <div class="tab-title">LINKS</div>
+        <div class="tab-sub">links shown on your public page</div>
+        <div class="card">
+          <div class="card-head">My Links <button class="btn btn-accent btn-sm" onclick="openLinkModal()">+ Add Link</button></div>
+          <div id="links-list"></div>
+        </div>
+      </div>
+
+      <!-- appearance -->
+      <div class="tab" id="tab-appear">
+        <div class="tab-title">APPEARANCE</div>
+        <div class="tab-sub">customize your profile's look</div>
+        <div class="card">
+          <div class="card-head">Preset Themes</div>
+          <div class="theme-grid" id="theme-grid"></div>
+        </div>
+        <div class="card">
+          <div class="card-head">Custom Colors</div>
+          <div class="color-fields">
+            <div class="color-field"><label><input type="color" id="cc-bg" value="#060606"> Background</label></div>
+            <div class="color-field"><label><input type="color" id="cc-text" value="#efefef"> Text</label></div>
+            <div class="color-field"><label><input type="color" id="cc-accent" value="#c8ff00"> Accent</label></div>
+            <div class="color-field"><label><input type="color" id="cc-lbg" value="#111111"> Link BG</label></div>
+            <div class="color-field"><label><input type="color" id="cc-ltxt" value="#efefef"> Link Text</label></div>
+          </div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:14px" onclick="applyCustom()">Use Custom Colors</button>
+        </div>
+        <div class="card">
+          <div class="card-head">Background Effect</div>
+          <div class="field">
+            <label>Effect</label>
+            <select id="bg-effect">
+              <option value="rain">Katakana Rain</option>
+              <option value="dots">Dot Grid</option>
+              <option value="gradient">Animated Gradient</option>
+              <option value="none">None</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-accent" onclick="saveAppearance()">Save Appearance</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ════ PUBLIC PROFILE ════ -->
+<div class="page" id="page-profile">
+  <canvas id="prf-canvas" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0"></canvas>
+  <div id="prf-gradient" style="display:none;position:fixed;inset:0;z-index:0;pointer-events:none"></div>
+  <div id="prf-dots" style="display:none;position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.13;background-image:radial-gradient(circle,#fff 1px,transparent 1px);background-size:28px 28px"></div>
+
+  <div class="prof-wrap">
+    <div id="pf-avatar"></div>
+    <div class="prof-name" id="pf-name"></div>
+    <div class="prof-bio" id="pf-bio"></div>
+    <div class="prof-links" id="pf-links"></div>
+  </div>
+  <div class="prof-badge">powered by <a href="/" onclick="go('home');return false">wsp.lat</a></div>
+</div>
 
 <script>
-  const SUPABASE_URL = 'https://dyxxpuirsuqtuehvijdf.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_8IaNO6bOuQHZdVyAPeP1Qg_sjjcGcVy';
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// ── Supabase ──
+const SB = supabase.createClient(
+  'https://dyxxpuirsuqtuehvijdf.supabase.co',
+  'sb_publishable_8IaNO6bOuQHZdVyAPeP1Qg_sjjcGcVy'
+);
 
-  let currentUser = null;
-  let currentProfile = null;
-  let selectedThemeKey = 'void';
+// ── State ──
+let USER=null, PROF=null, PICKED='lime';
+let rainHandle=null, gradTimer=null;
 
-  const THEMES = {
-    void: { bg: '#05050f', text: '#f0f0f0', accent: '#00e5ff', link_bg: '#0c0c18', link_text: '#f0f0f0', name: 'void' },
-    sakura: { bg: '#1a0a12', text: '#ffd6e7', accent: '#ff6bac', link_bg: '#2a1020', link_text: '#ffd6e7', name: 'sakura' },
-    forest: { bg: '#0a120a', text: '#c8f0c8', accent: '#4caf50', link_bg: '#0f1f0f', link_text: '#c8f0c8', name: 'forest' },
-    ocean: { bg: '#020e1a', text: '#a0d8ef', accent: '#0095ff', link_bg: '#071828', link_text: '#a0d8ef', name: 'ocean' },
-    gold: { bg: '#0f0c00', text: '#ffe082', accent: '#ffc107', link_bg: '#1a1400', link_text: '#ffe082', name: 'gold' },
-    cyber: { bg: '#000820', text: '#00ffee', accent: '#ff004f', link_bg: '#00122a', link_text: '#00ffee', name: 'cyber' },
-    dusk: { bg: '#1a0533', text: '#e0c3fc', accent: '#9c27b0', link_bg: '#250843', link_text: '#e0c3fc', name: 'dusk' }
-  };
+// ── Themes ──
+const THEMES={
+  lime:   {bg:'#060606',text:'#efefef',accent:'#c8ff00',lbg:'#111',ltxt:'#efefef',effect:'rain'},
+  void:   {bg:'#000000',text:'#ffffff',accent:'#ff3cac',lbg:'#0d0d0d',ltxt:'#ffffff',effect:'rain'},
+  ice:    {bg:'#020d18',text:'#c8e8ff',accent:'#5bc8ff',lbg:'#071524',ltxt:'#c8e8ff',effect:'dots'},
+  sakura: {bg:'#15060f',text:'#ffd6e7',accent:'#ff6ba8',lbg:'#200a15',ltxt:'#ffd6e7',effect:'rain'},
+  forest: {bg:'#060f06',text:'#c0e8b0',accent:'#5cd65c',lbg:'#0a1a0a',ltxt:'#c0e8b0',effect:'dots'},
+  solar:  {bg:'#0f0900',text:'#ffe082',accent:'#ffaa00',lbg:'#1a1200',ltxt:'#ffe082',effect:'gradient'},
+  cyber:  {bg:'#000818',text:'#00ffd4',accent:'#ff004f',lbg:'#00102a',ltxt:'#00ffd4',effect:'rain'},
+  clay:   {bg:'#f2ede8',text:'#1a1a1a',accent:'#c0553a',lbg:'#e8e0d8',ltxt:'#1a1a1a',effect:'none'},
+  grape:  {bg:'#0e0520',text:'#e0c3fc',accent:'#a855f7',lbg:'#160830',ltxt:'#e0c3fc',effect:'gradient'},
+  mono:   {bg:'#0d0d0d',text:'#cccccc',accent:'#ffffff',lbg:'#1a1a1a',ltxt:'#cccccc',effect:'none'},
+};
 
-  function showToast(msg) { const t = document.getElementById('toastMsg'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2800); }
-  function hideLoading() { const el = document.getElementById('loadingOverlay'); el.style.opacity = '0'; setTimeout(() => el.style.display = 'none', 400); }
-  function showView(id) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-  function showHome() { showView('homeView'); }
-
-  function initRain(canvasId) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
-    let cols, drops;
-    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; cols = Math.floor(canvas.width / 30); drops = Array(cols).fill(1); }
-    resizeCanvas(); window.addEventListener('resize', resizeCanvas);
-    function draw() {
-      ctx.fillStyle = 'rgba(5,5,15,0.04)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#ccc'; ctx.font = '18px monospace';
-      for (let i = 0; i < drops.length; i++) { const char = chars[Math.floor(Math.random() * chars.length)]; ctx.fillText(char, i * 30, drops[i] * 22); if (drops[i] * 22 > canvas.height && Math.random() > 0.98) drops[i] = 0; drops[i]++; }
-      requestAnimationFrame(draw);
-    }
-    draw();
+// ── Rain ──
+function startRain(id,opacity=0.05){
+  const cvs=document.getElementById(id);
+  if(!cvs)return null;
+  const ctx=cvs.getContext('2d');
+  const C='アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン゛゜ァィゥェォッャュョヴ';
+  let drops=[],cols=0,running=true,raf;
+  function resize(){
+    cvs.width=window.innerWidth;cvs.height=window.innerHeight;
+    cols=Math.floor(cvs.width/26);
+    drops=Array.from({length:cols},()=>Math.random()*-60);
   }
-  initRain('bgCanvas'); initRain('publicRainCanvas');
-
-  function closeAuthModal() { document.getElementById('authModal').classList.remove('open'); }
-  function openAuthModal(mode) { document.getElementById('authModal').classList.add('open'); if (mode === 'register') showRegisterPanel(); else showLoginPanel(); }
-  function showLoginPanel() { document.getElementById('authLoginDiv').style.display = 'block'; document.getElementById('authRegisterDiv').style.display = 'none'; }
-  function showRegisterPanel() { document.getElementById('authLoginDiv').style.display = 'none'; document.getElementById('authRegisterDiv').style.display = 'block'; }
-
-  async function doLogin() {
-    const email = document.getElementById('loginEmail').value.trim();
-    const pwd = document.getElementById('loginPassword').value;
-    const errDiv = document.getElementById('loginError');
-    errDiv.classList.remove('show');
-    const { error } = await supabase.auth.signInWithPassword({ email, password: pwd });
-    if (error) { errDiv.innerText = error.message; errDiv.classList.add('show'); return; }
-    closeAuthModal();
-    await loadDashboard();
-  }
-
-  async function doRegister() {
-    const username = document.getElementById('regUsername').value.trim().toLowerCase();
-    const email = document.getElementById('regEmail').value.trim();
-    const pwd = document.getElementById('regPassword').value;
-    const errDiv = document.getElementById('registerError');
-    errDiv.classList.remove('show');
-    if (!username || username.length < 3) { errDiv.innerText = 'Username (min 3 chars, letters/numbers/_)'; errDiv.classList.add('show'); return; }
-    const { data: taken } = await supabase.from('profiles').select('id').eq('username', username).maybeSingle();
-    if (taken) { errDiv.innerText = 'Username already taken'; errDiv.classList.add('show'); return; }
-    const { data: signUp, error: signUpErr } = await supabase.auth.signUp({ email, password: pwd });
-    if (signUpErr) { errDiv.innerText = signUpErr.message; errDiv.classList.add('show'); return; }
-    await supabase.from('profiles').insert({ id: signUp.user.id, username, display_name: username, bio: '', theme: 'void', links: [], avatar_url: null });
-    showToast('Account created! Welcome to wsp.lat');
-    closeAuthModal();
-    await loadDashboard();
-  }
-
-  async function logout() { await supabase.auth.signOut(); currentUser = null; currentProfile = null; showHome(); }
-
-  async function loadDashboard() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { showHome(); return; }
-    currentUser = user;
-    let { data: prof } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-    if (!prof) { showHome(); return; }
-    currentProfile = prof;
-    selectedThemeKey = prof.theme || 'void';
-    document.getElementById('overviewUsername').innerText = prof.username;
-    document.getElementById('editDisplay').value = prof.display_name || '';
-    document.getElementById('editBio').value = prof.bio || '';
-    document.getElementById('editAvatar').value = prof.avatar_url || '';
-    document.getElementById('statTheme').innerText = prof.theme || 'void';
-    document.getElementById('statLinks').innerText = (prof.links || []).length;
-    renderThemeGrid();
-    renderLinksList();
-    showView('dashboardView');
-  }
-
-  function renderThemeGrid() {
-    const grid = document.getElementById('themeGrid');
-    grid.innerHTML = '';
-    Object.entries(THEMES).forEach(([key, t]) => {
-      const div = document.createElement('div');
-      div.className = `theme-option ${key === selectedThemeKey ? 'selected' : ''}`;
-      div.style.background = t.bg;
-      div.style.border = `2px solid ${key === selectedThemeKey ? t.accent : '#2a2a2a'}`;
-      div.innerHTML = `<div style="height:60%;margin:12px 12px 0;background:${t.link_bg};border-radius:8px;"></div><span style="background:${t.accent};color:#fff">${t.name}</span>`;
-      div.onclick = () => { selectedThemeKey = key; renderThemeGrid(); };
-      grid.appendChild(div);
+  resize();
+  const ro=new ResizeObserver(resize);ro.observe(document.body);
+  cvs.style.opacity=opacity;
+  function draw(){
+    if(!running)return;
+    ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,cvs.width,cvs.height);
+    ctx.fillStyle='#fff';ctx.font='14px monospace';
+    drops.forEach((y,i)=>{
+      ctx.fillText(C[Math.floor(Math.random()*C.length)],i*26,y*18);
+      if(y*18>cvs.height&&Math.random()>.975)drops[i]=0;
+      drops[i]++;
     });
+    raf=requestAnimationFrame(draw);
+  }
+  draw();
+  return{stop(){running=false;cancelAnimationFrame(raf);ro.disconnect();ctx.clearRect(0,0,cvs.width,cvs.height)}};
+}
+
+// ── Pages ──
+function go(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('show'));
+  document.getElementById('page-'+id).classList.add('show');
+}
+function hideLoader(){
+  const l=document.getElementById('loader');
+  l.classList.add('gone');
+  setTimeout(()=>l.style.display='none',400);
+}
+
+// ── Router ──
+async function route(){
+  const slug=location.pathname.replace(/^\/+/,'').replace(/\/+$/,'').split('?')[0];
+  if(slug&&slug!=='index.html'){
+    await loadPublicProfile(slug);
+  } else {
+    const {data:{user}}=await SB.auth.getUser();
+    if(user){USER=user;await loadDash();}
+    else go('home');
+  }
+  hideLoader();
+}
+
+// ── Auth ──
+function openAuth(mode){swapAuth(mode);document.getElementById('auth-modal').classList.add('open');}
+function closeAuth(){document.getElementById('auth-modal').classList.remove('open');}
+function swapAuth(mode){
+  document.getElementById('view-login').style.display=mode==='login'?'block':'none';
+  document.getElementById('view-reg').style.display=mode==='reg'?'block':'none';
+  document.getElementById('lerr').classList.remove('show');
+  document.getElementById('rerr').classList.remove('show');
+}
+
+async function doLogin(){
+  const email=document.getElementById('l-email').value.trim();
+  const pw=document.getElementById('l-pw').value;
+  const err=document.getElementById('lerr');err.classList.remove('show');
+  const {data,error}=await SB.auth.signInWithPassword({email,password:pw});
+  if(error){err.textContent=error.message;err.classList.add('show');return;}
+  USER=data.user;closeAuth();await loadDash();
+}
+
+async function doRegister(){
+  const username=document.getElementById('r-user').value.trim();
+  const email=document.getElementById('r-email').value.trim();
+  const pw=document.getElementById('r-pw').value;
+  const err=document.getElementById('rerr');err.classList.remove('show');
+  if(username.length<2){err.textContent='Username must be 2+ characters';err.classList.add('show');return;}
+  if(!email){err.textContent='Email required';err.classList.add('show');return;}
+  if(pw.length<6){err.textContent='Password must be 6+ characters';err.classList.add('show');return;}
+  // check taken
+  const {data:ex}=await SB.from('profiles').select('id').eq('username',username).maybeSingle();
+  if(ex){err.textContent='Username already taken';err.classList.add('show');return;}
+  const {data,error}=await SB.auth.signUp({email,password:pw});
+  if(error){err.textContent=error.message;err.classList.add('show');return;}
+  await SB.from('profiles').insert({
+    id:data.user.id,username,display_name:username,bio:'',avatar_url:'',
+    theme:'lime',custom_colors:null,bg_effect:'rain',links:[]
+  });
+  USER=data.user;closeAuth();toast('Welcome to wsp.lat ✦');await loadDash();
+}
+
+async function doLogout(){
+  await SB.auth.signOut();USER=null;PROF=null;
+  history.pushState({},'','/');go('home');
+}
+
+// ── Dashboard ──
+async function loadDash(){
+  const {data}=await SB.from('profiles').select('*').eq('id',USER.id).single();
+  if(!data){go('home');return;}
+  PROF=data;PICKED=PROF.theme||'lime';fillDash();go('dash');
+}
+
+function fillDash(){
+  document.getElementById('ov-slug').textContent=PROF.username;
+  document.getElementById('ov-links').textContent=(PROF.links||[]).length;
+  document.getElementById('ov-theme').textContent=PROF.theme||'lime';
+  document.getElementById('p-name').value=PROF.display_name||'';
+  document.getElementById('p-bio').value=PROF.bio||'';
+  document.getElementById('p-avatar').value=PROF.avatar_url||'';
+  document.getElementById('bg-effect').value=PROF.bg_effect||'rain';
+  if(PROF.custom_colors){
+    const c=PROF.custom_colors;
+    document.getElementById('cc-bg').value=c.bg||'#060606';
+    document.getElementById('cc-text').value=c.text||'#efefef';
+    document.getElementById('cc-accent').value=c.accent||'#c8ff00';
+    document.getElementById('cc-lbg').value=c.lbg||'#111111';
+    document.getElementById('cc-ltxt').value=c.ltxt||'#efefef';
+  }
+  refreshAvPrev();buildThemeGrid();renderLinks();
+}
+
+function refreshAvPrev(){
+  const wrap=document.getElementById('av-preview');
+  const url=document.getElementById('p-avatar').value.trim();
+  const name=(document.getElementById('p-name').value.trim()||PROF?.username||'?')[0].toUpperCase();
+  wrap.innerHTML=url
+    ?`<img class="avatar-preview" src="${x(url)}" onerror="this.style.display='none'">`
+    :`<div class="avatar-initials" style="background:linear-gradient(135deg,#c8ff00,#333);color:#000">${name}</div>`;
+}
+
+function showTab(el,name){
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('tab-'+name).classList.add('on');
+}
+
+async function saveProfile(){
+  const dn=document.getElementById('p-name').value.trim();
+  const bio=document.getElementById('p-bio').value.trim();
+  const av=document.getElementById('p-avatar').value.trim();
+  const {error}=await SB.from('profiles').update({display_name:dn,bio,avatar_url:av}).eq('id',USER.id);
+  if(error){toast('Error: '+error.message);return;}
+  PROF={...PROF,display_name:dn,bio,avatar_url:av};toast('Profile saved ✦');
+}
+
+// links
+function openLinkModal(){
+  document.getElementById('lnk-title').value='';
+  document.getElementById('lnk-url').value='';
+  document.getElementById('link-err').classList.remove('show');
+  document.getElementById('link-modal').classList.add('open');
+}
+function closeLinkModal(){document.getElementById('link-modal').classList.remove('open');}
+
+async function confirmAddLink(){
+  const title=document.getElementById('lnk-title').value.trim();
+  const url=document.getElementById('lnk-url').value.trim();
+  const err=document.getElementById('link-err');err.classList.remove('show');
+  if(!title){err.textContent='Title required';err.classList.add('show');return;}
+  if(!url){err.textContent='URL required';err.classList.add('show');return;}
+  const links=[...(PROF.links||[]),{title,url,id:Date.now()}];
+  const {error}=await SB.from('profiles').update({links}).eq('id',USER.id);
+  if(error){err.textContent=error.message;err.classList.add('show');return;}
+  PROF.links=links;closeLinkModal();renderLinks();
+  document.getElementById('ov-links').textContent=links.length;
+  toast('Link added!');
+}
+
+async function deleteLink(id){
+  const links=(PROF.links||[]).filter(l=>l.id!==id);
+  await SB.from('profiles').update({links}).eq('id',USER.id);
+  PROF.links=links;renderLinks();
+  document.getElementById('ov-links').textContent=links.length;
+  toast('Removed');
+}
+
+function renderLinks(){
+  const el=document.getElementById('links-list');
+  const links=PROF.links||[];
+  if(!links.length){el.innerHTML='<div class="empty-state">No links yet — add your first!</div>';return;}
+  el.innerHTML=links.map(l=>`
+    <div class="link-row">
+      <div class="lr-info">
+        <div class="lr-title">${x(l.title)}</div>
+        <div class="lr-url">${x(l.url)}</div>
+      </div>
+      <div class="lr-btns">
+        <a href="${x(l.url)}" target="_blank" class="btn btn-ghost btn-sm">↗</a>
+        <button class="btn btn-red btn-sm" onclick="deleteLink(${l.id})">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+// appearance
+function buildThemeGrid(){
+  document.getElementById('theme-grid').innerHTML=Object.entries(THEMES).map(([k,t])=>`
+    <div class="theme-tile${k===PICKED?' picked':''}" onclick="pickTheme('${k}',this)">
+      <div class="theme-preview" style="background:${t.bg}">
+        <div class="tp-circle" style="background:${t.accent}"></div>
+        <div class="tp-line" style="background:${t.lbg};border:1px solid ${t.accent}44"></div>
+        <div class="tp-line" style="background:${t.lbg};border:1px solid ${t.accent}44;width:45%"></div>
+      </div>
+      <span class="tname">${k}</span>
+    </div>`).join('');
+}
+
+function pickTheme(key,el){
+  PICKED=key;
+  document.querySelectorAll('.theme-tile').forEach(t=>t.classList.remove('picked'));
+  el.classList.add('picked');
+  const t=THEMES[key];
+  if(t){
+    document.getElementById('cc-bg').value=t.bg;
+    document.getElementById('cc-text').value=t.text;
+    document.getElementById('cc-accent').value=t.accent;
+    document.getElementById('cc-lbg').value=t.lbg;
+    document.getElementById('cc-ltxt').value=t.ltxt;
+    document.getElementById('bg-effect').value=t.effect;
+  }
+}
+
+function applyCustom(){
+  PICKED='custom';
+  document.querySelectorAll('.theme-tile').forEach(t=>t.classList.remove('picked'));
+  toast('Custom colors set — hit Save Appearance');
+}
+
+async function saveAppearance(){
+  const bg_effect=document.getElementById('bg-effect').value;
+  let custom_colors=null;
+  if(PICKED==='custom'){
+    custom_colors={
+      bg:document.getElementById('cc-bg').value,
+      text:document.getElementById('cc-text').value,
+      accent:document.getElementById('cc-accent').value,
+      lbg:document.getElementById('cc-lbg').value,
+      ltxt:document.getElementById('cc-ltxt').value,
+    };
+  }
+  const {error}=await SB.from('profiles').update({theme:PICKED,bg_effect,custom_colors}).eq('id',USER.id);
+  if(error){toast('Error: '+error.message);return;}
+  PROF={...PROF,theme:PICKED,bg_effect,custom_colors};
+  document.getElementById('ov-theme').textContent=PICKED;
+  toast('Appearance saved ✦');
+}
+
+function viewMyProfile(){
+  window.open('/'+PROF.username,'_blank');
+}
+function copyUrl(){
+  navigator.clipboard.writeText(location.origin+'/'+PROF.username).then(()=>toast('URL copied!'));
+}
+
+// ── Public Profile ──
+async function loadPublicProfile(username){
+  const {data:prof,error}=await SB.from('profiles').select('*').eq('username',username).maybeSingle();
+  if(error||!prof){go('home');toast('Profile not found');return;}
+
+  let colors;
+  if(prof.theme==='custom'&&prof.custom_colors){
+    colors={...prof.custom_colors,effect:prof.bg_effect||'none'};
+  } else {
+    colors={...(THEMES[prof.theme]||THEMES.lime),effect:prof.bg_effect||'rain'};
   }
 
-  function renderLinksList() {
-    const links = currentProfile.links || [];
-    const container = document.getElementById('linksContainer');
-    if (!links.length) { container.innerHTML = '<div class="card" style="text-align:center;color:var(--muted);">✨ No links yet. Add your first link above.</div>'; return; }
-    container.innerHTML = links.map((l, idx) => `<div class="link-item"><div><div class="link-title">${escapeHtml(l.title)}</div><div class="link-url">${escapeHtml(l.url)}</div></div><button class="icon-btn danger" onclick="removeLink(${idx})">✕ Remove</button></div>`).join('');
-    document.getElementById('statLinks').innerText = links.length;
+  const pg=document.getElementById('page-profile');
+  pg.style.background=colors.bg;pg.style.color=colors.text;
+
+  // avatar
+  const avWrap=document.getElementById('pf-avatar');
+  if(prof.avatar_url){
+    avWrap.innerHTML=`<img class="prof-avatar" src="${x(prof.avatar_url)}" alt="">`;
+  } else {
+    const d=document.createElement('div');
+    d.className='prof-initials';
+    d.style.background=`linear-gradient(135deg,${colors.accent},${colors.bg})`;
+    d.style.color=colors.accent;
+    d.textContent=(prof.display_name||prof.username||'?')[0].toUpperCase();
+    avWrap.innerHTML='';avWrap.appendChild(d);
   }
 
-  async function addLink() {
-    const title = document.getElementById('linkTitle').value.trim();
-    const url = document.getElementById('linkUrl').value.trim();
-    if (!title || !url) { showToast('Fill both title and URL'); return; }
-    const newLinks = [...(currentProfile.links || []), { title, url }];
-    await supabase.from('profiles').update({ links: newLinks }).eq('id', currentUser.id);
-    currentProfile.links = newLinks;
-    document.getElementById('linkTitle').value = '';
-    document.getElementById('linkUrl').value = '';
-    renderLinksList();
-    showToast('Link added ✓');
-  }
-  window.removeLink = async (idx) => {
-    const newLinks = [...(currentProfile.links || [])];
-    newLinks.splice(idx, 1);
-    await supabase.from('profiles').update({ links: newLinks }).eq('id', currentUser.id);
-    currentProfile.links = newLinks;
-    renderLinksList();
-    showToast('Link removed');
-  };
-  async function updateProfile() {
-    const display_name = document.getElementById('editDisplay').value.trim();
-    const bio = document.getElementById('editBio').value.trim();
-    const avatar_url = document.getElementById('editAvatar').value.trim();
-    await supabase.from('profiles').update({ display_name, bio, avatar_url }).eq('id', currentUser.id);
-    currentProfile = { ...currentProfile, display_name, bio, avatar_url };
-    showToast('Profile saved ✦');
-  }
-  async function saveTheme() {
-    await supabase.from('profiles').update({ theme: selectedThemeKey }).eq('id', currentUser.id);
-    currentProfile.theme = selectedThemeKey;
-    document.getElementById('statTheme').innerText = selectedThemeKey;
-    showToast('Theme updated');
-  }
-  function copyProfileUrl() { if (currentProfile) navigator.clipboard.writeText(`${window.location.origin}/${currentProfile.username}`); showToast('Copied!'); }
-  function viewMyPublicProfile() { if (currentProfile) loadPublicProfile(currentProfile.username); }
+  document.getElementById('pf-name').textContent=prof.display_name||prof.username;
+  document.getElementById('pf-bio').textContent=prof.bio||'';
 
-  async function loadPublicProfile(username) {
-    const { data: prof, error } = await supabase.from('profiles').select('*').eq('username', username).single();
-    if (error || !prof) { showHome(); showToast('Profile not found'); return; }
-    const theme = THEMES[prof.theme] || THEMES.void;
-    const pv = document.getElementById('publicProfileView');
-    pv.style.background = theme.bg; pv.style.color = theme.text;
-    const avatarWrap = document.getElementById('pubAvatarWrap');
-    if (prof.avatar_url && prof.avatar_url.startsWith('http')) { avatarWrap.innerHTML = `<img class="profile-avatar" src="${escapeHtml(prof.avatar_url)}" alt="avatar">`; }
-    else { const letter = (prof.display_name || prof.username || '?')[0].toUpperCase(); avatarWrap.innerHTML = `<div class="profile-avatar-placeholder" style="background:linear-gradient(135deg,${theme.accent},${theme.accent2})">${letter}</div>`; }
-    document.getElementById('pubUsername').innerText = prof.display_name || prof.username;
-    document.getElementById('pubBio').innerText = prof.bio || '';
-    const linksHtml = (prof.links || []).map(l => `<a class="profile-link-btn" href="${escapeHtml(l.url)}" target="_blank" rel="noopener" style="background:${theme.link_bg};color:${theme.link_text};border:1px solid ${theme.accent}40;">${escapeHtml(l.title)}</a>`).join('');
-    document.getElementById('pubLinks').innerHTML = linksHtml || '<div style="opacity:0.4">no links yet</div>';
-    showView('publicProfileView');
-  }
+  const linksEl=document.getElementById('pf-links');
+  const links=prof.links||[];
+  linksEl.innerHTML=links.length
+    ?links.map(l=>`<a class="prof-link" href="${x(l.url)}" target="_blank" rel="noopener" style="background:${colors.lbg};color:${colors.ltxt};border-color:${colors.accent}22">${x(l.title)}</a>`).join('')
+    :'<div class="prof-no-links">no links yet</div>';
 
-  function escapeHtml(str) { return String(str || '').replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
-  function claimFromLanding() { const val = document.getElementById('claimInput').value.trim(); if (val) { document.getElementById('regUsername').value = val; openAuthModal('register'); } else showToast('Enter a username'); }
+  setupEffect(colors);
+  go('profile');
+}
 
-  async function routeFromUrl() {
-    const path = window.location.pathname.slice(1).split('?')[0];
-    if (path && path !== 'index.html' && path !== '') { await loadPublicProfile(path); }
-    else { const { data: { user } } = await supabase.auth.getUser(); if (user) await loadDashboard(); else showHome(); }
-    hideLoading();
+function setupEffect(colors){
+  if(rainHandle){rainHandle.stop();rainHandle=null;}
+  if(gradTimer){clearInterval(gradTimer);gradTimer=null;}
+  const cvs=document.getElementById('prf-canvas');
+  const grad=document.getElementById('prf-gradient');
+  const dots=document.getElementById('prf-dots');
+  cvs.style.display='none';grad.style.display='none';dots.style.display='none';
+  const eff=colors.effect||'none';
+  if(eff==='rain'){cvs.style.display='block';rainHandle=startRain('prf-canvas',0.06);}
+  else if(eff==='gradient'){
+    grad.style.display='block';let deg=0;
+    grad.style.background=`linear-gradient(${deg}deg,${colors.bg},${colors.accent}22,${colors.bg})`;
+    gradTimer=setInterval(()=>{deg=(deg+.3)%360;grad.style.background=`linear-gradient(${deg}deg,${colors.bg},${colors.accent}33,${colors.bg})`;},30);
+  } else if(eff==='dots'){
+    dots.style.display='block';
+    dots.style.backgroundImage=`radial-gradient(circle,${colors.accent} 1px,transparent 1px)`;
   }
-  document.querySelectorAll('.sidebar-item').forEach(item => { item.addEventListener('click', () => { const tab = item.getAttribute('data-tab'); document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active')); document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.add('active'); document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active')); item.classList.add('active'); }); });
-  window.doLogin = doLogin; window.doRegister = doRegister; window.logout = logout; window.addLink = addLink; window.updateProfile = updateProfile; window.saveTheme = saveTheme; window.copyProfileUrl = copyProfileUrl; window.viewMyPublicProfile = viewMyPublicProfile; window.claimFromLanding = claimFromLanding; window.closeAuthModal = closeAuthModal; window.openAuthModal = openAuthModal; window.showLoginPanel = showLoginPanel; window.showRegisterPanel = showRegisterPanel; window.showHome = showHome;
-  routeFromUrl();
+}
+
+// ── Helpers ──
+function claimIt(){
+  const v=document.getElementById('claim-in').value.trim();
+  document.getElementById('r-user').value=v;
+  openAuth('reg');
+}
+function x(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+let toastT;
+function toast(msg){
+  const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// ── Boot ──
+startRain('rain',0.045);
+route();
 </script>
+
+<!--
+═══════════════════════════════════════════
+  SUPABASE SQL — run once in SQL Editor:
+═══════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id            UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  username      TEXT UNIQUE NOT NULL,
+  display_name  TEXT,
+  bio           TEXT,
+  avatar_url    TEXT,
+  theme         TEXT DEFAULT 'lime',
+  custom_colors JSONB,
+  bg_effect     TEXT DEFAULT 'rain',
+  links         JSONB DEFAULT '[]'::jsonb,
+  created_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "public read"
+  ON public.profiles FOR SELECT USING (true);
+
+CREATE POLICY "owner write"
+  ON public.profiles FOR ALL USING (auth.uid() = id);
+
+═══════════════════════════════════════════
+  HOSTING (required for URL routing):
+
+  Netlify → add file named "_redirects":
+    /*  /index.html  200
+
+  Vercel → add vercel.json:
+    {"rewrites":[{"source":"/(.*)","destination":"/index.html"}]}
+
+  Cloudflare Pages → add _redirects file:
+    /*  /index.html  200
+═══════════════════════════════════════════
+-->
 </body>
 </html>
