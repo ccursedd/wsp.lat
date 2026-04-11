@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>void.page — your link in bio, reimagined</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  :root {
+    --bg: #080808;
+    --surface: #111111;
+    --border: #222222;
+    --accent: #ff3cac;
+    --accent2: #7928ca;
+    --text: #f0f0f0;
+    --muted: #6b6b6b;
+    --card: #0e0e0e;
+    --danger: #e74c3c;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Katakana Rain Canvas */
+  #rain-canvas, #profile-rain {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.08;
+  }
+
+  /* View system */
+  .view {
+    display: none;
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+  }
+  .view.active { display: block; }
+
+  /* Navigation */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(8,8,8,0.82);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    cursor: pointer;
+  }
+  .nav-links { display: flex; gap: 32px; align-items: center; }
+  .nav-link {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .nav-link:hover { color: var(--text); }
+
+  /* Buttons */
+  .btn {
+    padding: 10px 24px;
+    border-radius: 60px;
+    border: none;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+  }
+  .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn-danger { background: var(--danger); color: white; }
+
+  /* Hero Section */
+  .hero {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 24px;
+  }
+  .hero-eyebrow {
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 24px;
+  }
+  .hero-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.8rem, 8vw, 6.5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 24px;
+  }
+  .hero-title span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero-sub {
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    max-width: 480px;
+    margin-bottom: 48px;
+  }
+  .claim-bar {
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 60px;
+    padding: 5px 5px 5px 22px;
+    width: 100%;
+    max-width: 440px;
+    margin-bottom: 28px;
+  }
+  .claim-prefix { color: var(--muted); font-size: 0.8rem; white-space: nowrap; margin-right: 6px; }
+  .claim-bar input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    padding: 12px 0;
+  }
+  .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(12px);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    padding: 40px;
+    width: 90%;
+    max-width: 420px;
+    position: relative;
+  }
+  .modal-title { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
+  .modal-sub { color: var(--muted); font-size: 0.75rem; margin-bottom: 28px; }
+  .form-group { margin-bottom: 20px; }
+  .form-group label { display: block; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .form-group input, .form-group textarea, .form-group select {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    outline: none;
+    transition: border 0.2s;
+  }
+  .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
+  .error-msg {
+    background: rgba(231,76,60,0.12);
+    border-left: 3px solid var(--danger);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 0.7rem;
+    color: #ff8a7a;
+    margin-bottom: 18px;
+    display: none;
+  }
+  .error-msg.show { display: block; }
+  .auth-switch { text-align: center; margin-top: 20px; font-size: 0.75rem; }
+  .auth-switch a { color: var(--accent); cursor: pointer; }
+
+  /* Dashboard Layout */
+  .dashboard-layout {
+    display: grid;
+    grid-template-columns: 270px 1fr;
+    min-height: calc(100vh - 72px);
+  }
+  .sidebar {
+    border-right: 1px solid var(--border);
+    padding: 32px 20px;
+    background: rgba(0,0,0,0.2);
+  }
+  .sidebar-item {
+    padding: 12px 16px;
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: var(--muted);
+    transition: all 0.15s;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .sidebar-item:hover { background: var(--surface); color: var(--text); }
+  .sidebar-item.active { background: rgba(255,60,172,0.12); color: var(--accent); border-left: 2px solid var(--accent); }
+  .dash-content { padding: 40px; overflow-y: auto; }
+  .dash-section { display: none; }
+  .dash-section.active { display: block; }
+  .section-title { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
+  .section-sub { color: var(--muted); font-size: 0.75rem; margin-bottom: 32px; letter-spacing: -0.2px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 28px;
+    margin-bottom: 28px;
+  }
+  .card-title { font-family: 'Syne', sans-serif; font-weight: 700; margin-bottom: 20px; font-size: 1rem; }
+
+  /* Profile URL badge */
+  .profile-url-badge {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface);
+    border-radius: 60px;
+    padding: 10px 20px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .url { font-size: 0.85rem; word-break: break-all; flex: 1; }
+  .url span { color: var(--accent); font-weight: bold; }
+
+  /* Theme Grid */
+  .theme-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 16px;
+  }
+  .theme-option {
+    border-radius: 20px;
+    aspect-ratio: 4/3;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.1s ease, border 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+  .theme-option.selected { border-color: var(--accent); transform: scale(1.02); }
+  .theme-option span {
+    position: absolute;
+    bottom: 8px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 0.6rem;
+    font-weight: bold;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    padding: 4px;
+  }
+
+  /* Link Items */
+  .link-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+  }
+  .link-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 4px; }
+  .link-url { font-size: 0.7rem; color: var(--muted); }
+  .icon-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    transition: 0.1s;
+  }
+  .icon-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* Public Profile */
+  #profile-view {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px;
+    position: relative;
+  }
+  .profile-card {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    max-width: 480px;
+    width: 100%;
+  }
+  .profile-avatar {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(255,255,255,0.2);
+    margin: 0 auto 20px;
+  }
+  .profile-avatar-placeholder {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    font-weight: 800;
+    font-family: 'Syne', sans-serif;
+  }
+  .profile-username { font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 800; margin-bottom: 12px; }
+  .profile-bio { opacity: 0.8; font-size: 0.85rem; margin-bottom: 32px; }
+  .profile-links { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+  .profile-link-btn {
+    padding: 14px 20px;
+    border-radius: 60px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: 0.2s;
+    backdrop-filter: blur(4px);
+  }
+  .profile-link-btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
+  .powered-by {
+    position: fixed;
+    bottom: 20px;
+    font-size: 0.6rem;
+    color: var(--muted);
+    text-align: center;
+    width: 100%;
+    z-index: 2;
+  }
+
+  /* Loading + Toast */
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: #080808;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.4s;
+  }
+  .loader {
+    width: 42px;
+    height: 42px;
+    border: 2px solid var(--border);
+    border-top: 2px solid var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: #1a1a1a;
+    border-left: 3px solid var(--accent);
+    border-radius: 40px;
+    padding: 12px 24px;
+    font-size: 0.75rem;
+    z-index: 1001;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: 0.25s ease;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  @media (max-width: 760px) {
+    .dashboard-layout { grid-template-columns: 1fr; }
+    .sidebar { display: flex; flex-wrap: wrap; gap: 8px; border-right: none; border-bottom: 1px solid var(--border); padding: 16px; }
+    .sidebar-item { width: auto; }
+    nav { padding: 16px 20px; }
+    .dash-content { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="rain-canvas"></canvas>
+<div id="loading-overlay" class="loading-overlay"><div class="loader"></div><span style="margin-top:16px;font-size:0.7rem;">void loading...</span></div>
+<div id="toast" class="toast"></div>
+
+<!-- Auth Modal -->
+<div id="auth-modal" class="modal-overlay">
+  <div class="modal">
+    <button class="modal-close" style="position:absolute;top:18px;right:22px;background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;" onclick="closeAuth()">✕</button>
+    <div id="auth-login">
+      <div class="modal-title">sign in</div>
+      <div class="modal-sub">welcome back to void.page</div>
+      <div class="error-msg" id="login-error"></div>
+      <div class="form-group"><label>email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
+      <div class="form-group"><label>password</label><input type="password" id="login-password" placeholder="••••••••"></div>
+      <button class="btn btn-primary" style="width:100%;" onclick="doLogin()">sign in →</button>
+      <div class="auth-switch">no account? <a onclick="switchToRegister()">create one</a></div>
+    </div>
+    <div id="auth-register" style="display:none">
+      <div class="modal-title">create account</div>
+      <div class="modal-sub">claim your username ✦</div>
+      <div class="error-msg" id="register-error"></div>
+      <div class="form-group"><label>username (void.page/yourname)</label><input type="text" id="reg-username" placeholder="soul" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')"></div>
+      <div class="form-group"><label>email</label><input type="email" id="reg-email"></div>
+      <div class="form-group"><label>password (min 6)</label><input type="password" id="reg-password"></div>
+      <button class="btn btn-primary" style="width:100%;" onclick="doRegister()">create →</button>
+      <div class="auth-switch">already on void? <a onclick="switchToLogin()">sign in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- HOME VIEW -->
+<div id="home-view" class="view active">
+  <nav>
+    <div class="logo" onclick="showHome()">void.page</div>
+    <div class="nav-links"><span class="nav-link" onclick="openAuth('login')">Sign In</span><button class="btn btn-primary" onclick="openAuth('register')">Get Started</button></div>
+  </nav>
+  <div class="hero">
+    <div class="hero-eyebrow">✦ your link-in-bio, reimagined</div>
+    <h1 class="hero-title">Design your <span>perfect</span><br>profile</h1>
+    <p class="hero-sub">Create stunning bio pages with custom themes, effects, and dynamic links. Stand out.</p>
+    <div class="claim-bar"><span class="claim-prefix">void.page/</span><input type="text" id="claim-input" placeholder="yourname"><button class="btn btn-primary" onclick="claimUsername()">Claim →</button></div>
+    <div class="hero-actions"><button class="btn btn-primary" onclick="openAuth('register')">Create Your Profile</button><button class="btn btn-ghost" onclick="openAuth('login')">Sign In</button></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard-view" class="view">
+  <nav><div class="logo" onclick="showHome()">void.page</div><div class="nav-links"><span class="nav-link" id="profile-preview-link" onclick="previewProfile()">↗ View Profile</span><button class="btn btn-ghost" onclick="doLogout()">Sign Out</button></div></nav>
+  <div class="dashboard-layout">
+    <div class="sidebar"><div class="sidebar-item active" data-tab="overview">📊 Overview</div><div class="sidebar-item" data-tab="profile">👤 Profile</div><div class="sidebar-item" data-tab="links">🔗 Links</div><div class="sidebar-item" data-tab="appearance">🎨 Appearance</div></div>
+    <div class="dash-content">
+      <div class="dash-section active" id="tab-overview"><div class="section-title">Overview</div><div class="section-sub">Your profile snapshot</div><div class="profile-url-badge"><span class="url">void.page/<span id="url-display">username</span></span><button class="btn btn-ghost" onclick="copyProfileUrl()" style="padding:6px 16px;">Copy</button><button class="btn btn-primary" onclick="previewProfile()" style="padding:6px 16px;">View →</button></div><div class="card"><div class="card-title">Stats</div><div style="display:flex;gap:32px;text-align:center"><div><div style="font-size:2rem;font-weight:800;color:var(--accent)" id="stat-links">0</div><div style="font-size:0.7rem;">links</div></div><div><div style="font-size:2rem;font-weight:800">✦</div><div style="font-size:0.7rem;">active</div></div><div><div style="font-size:2rem;font-weight:800;color:var(--accent2)" id="stat-theme">—</div><div style="font-size:0.7rem;">theme</div></div></div></div></div>
+      <div class="dash-section" id="tab-profile"><div class="section-title">Edit Profile</div><div class="section-sub">Customize your public face</div><div class="card"><div class="form-group"><label>Display Name</label><input type="text" id="edit-display" placeholder="Your alias"></div><div class="form-group"><label>Bio</label><textarea id="edit-bio" rows="3" placeholder="Digital wanderer ..."></textarea></div><div class="form-group"><label>Avatar URL (image link)</label><input type="url" id="edit-avatar" placeholder="https://..."></div><button class="btn btn-primary" onclick="saveProfile()">Save Profile</button></div></div>
+      <div class="dash-section" id="tab-links"><div class="section-title">My Links</div><div class="section-sub">Add, remove links for your bio page</div><div class="card"><div class="card-title">➕ Add new link</div><div class="form-group"><label>Title</label><input type="text" id="link-title" placeholder="Portfolio"></div><div class="form-group"><label>URL</label><input type="url" id="link-url" placeholder="https://..."></div><button class="btn btn-primary" onclick="addLink()">+ Add Link</button></div><div id="links-list"></div></div>
+      <div class="dash-section" id="tab-appearance"><div class="section-title">Appearance</div><div class="section-sub">Pick a vibe for your public profile</div><div class="card"><div class="card-title">Theme Library</div><div class="theme-grid" id="theme-grid"></div><button class="btn btn-primary" style="margin-top:24px" onclick="saveAppearance()">Save Theme</button></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PUBLIC PROFILE VIEW -->
+<div id="profile-view" class="view"><canvas id="profile-rain"></canvas><div class="profile-card"><div id="pub-avatar-wrap"></div><div class="profile-username" id="pub-username">—</div><div class="profile-bio" id="pub-bio"></div><div class="profile-links" id="pub-links"></div></div><div class="powered-by">powered by <a href="/" onclick="showHome();return false;" style="color:var(--accent);">void.page</a></div></div>
+
+<script>
+  // ==================== SUPABASE CONFIG ====================
+  const SUPABASE_URL = 'https://dyxxpuirsuqtuehvijdf.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_8IaNO6bOuQHZdVyAPeP1Qg_sjjcGcVy';
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let currentUser = null;
+  let currentProfile = null;
+  let selectedThemeKey = 'void';
+
+  const THEMES = {
+    void: { bg: '#080808', text: '#f0f0f0', accent: '#ff3cac', link_bg: '#111111', link_text: '#f0f0f0', name: 'void' },
+    sakura: { bg: '#1a0a12', text: '#ffd6e7', accent: '#ff6bac', link_bg: '#2a1020', link_text: '#ffd6e7', name: 'sakura' },
+    forest: { bg: '#0a120a', text: '#c8f0c8', accent: '#4caf50', link_bg: '#0f1f0f', link_text: '#c8f0c8', name: 'forest' },
+    ocean: { bg: '#020e1a', text: '#a0d8ef', accent: '#0095ff', link_bg: '#071828', link_text: '#a0d8ef', name: 'ocean' },
+    gold: { bg: '#0f0c00', text: '#ffe082', accent: '#ffc107', link_bg: '#1a1400', link_text: '#ffe082', name: 'gold' },
+    mono: { bg: '#f5f5f5', text: '#111111', accent: '#111111', link_bg: '#dddddd', link_text: '#111111', name: 'mono' },
+    cyber: { bg: '#000820', text: '#00ffee', accent: '#ff004f', link_bg: '#00122a', link_text: '#00ffee', name: 'cyber' },
+    dusk: { bg: '#1a0533', text: '#e0c3fc', accent: '#9c27b0', link_bg: '#250843', link_text: '#e0c3fc', name: 'dusk' }
+  };
+
+  // Katakana rain effect
+  function initRain(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const katakana = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+    let cols, drops;
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      cols = Math.floor(canvas.width / 30);
+      drops = Array(cols).fill(1);
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    function drawRain() {
+      ctx.fillStyle = 'rgba(8,8,8,0.045)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#ccc';
+      ctx.font = '18px monospace';
+      for (let i = 0; i < drops.length; i++) {
+        const char = katakana[Math.floor(Math.random() * katakana.length)];
+        const x = i * 30;
+        const y = drops[i] * 22;
+        ctx.fillText(char, x, y);
+        if (y > canvas.height && Math.random() > 0.98) drops[i] = 0;
+        drops[i]++;
+      }
+      requestAnimationFrame(drawRain);
+    }
+    drawRain();
+  }
+  initRain('rain-canvas');
+  initRain('profile-rain');
+
+  // UI helpers
+  function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2800); }
+  function hideLoading() { const el = document.getElementById('loading-overlay'); el.style.opacity = '0'; setTimeout(() => el.style.display = 'none', 400); }
+  function esc(str) { return String(str || '').replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+  function showView(id) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+  function showHome() { showView('home-view'); }
+
+  // Auth Modal
+  function closeAuth() { document.getElementById('auth-modal').classList.remove('open'); }
+  function openAuth(mode) { document.getElementById('auth-modal').classList.add('open'); if(mode === 'register') switchToRegister(); else switchToLogin(); }
+  function switchToLogin() { document.getElementById('auth-login').style.display = 'block'; document.getElementById('auth-register').style.display = 'none'; }
+  function switchToRegister() { document.getElementById('auth-login').style.display = 'none'; document.getElementById('auth-register').style.display = 'block'; }
+
+  async function doLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const pwd = document.getElementById('login-password').value;
+    const errDiv = document.getElementById('login-error');
+    errDiv.classList.remove('show');
+    const { error } = await sb.auth.signInWithPassword({ email, password: pwd });
+    if(error) { errDiv.innerText = error.message; errDiv.classList.add('show'); return; }
+    closeAuth();
+    await loadDashboard();
+  }
+
+  async function doRegister() {
+    const username = document.getElementById('reg-username').value.trim().toLowerCase();
+    const email = document.getElementById('reg-email').value.trim();
+    const pwd = document.getElementById('reg-password').value;
+    const errDiv = document.getElementById('register-error');
+    errDiv.classList.remove('show');
+    if (!username || username.length < 3) { errDiv.innerText = 'Username (min 3 chars, letters/numbers/_ )'; errDiv.classList.add('show'); return; }
+    const { data: taken } = await sb.from('profiles').select('id').eq('username', username).maybeSingle();
+    if(taken) { errDiv.innerText = 'Username already taken'; errDiv.classList.add('show'); return; }
+    const { data: signUpData, error: signUpErr } = await sb.auth.signUp({ email, password: pwd });
+    if(signUpErr) { errDiv.innerText = signUpErr.message; errDiv.classList.add('show'); return; }
+    const userId = signUpData.user.id;
+    await sb.from('profiles').insert({ id: userId, username, display_name: username, bio: '', theme: 'void', links: [], avatar_url: null });
+    showToast('Account created! Welcome to void.page');
+    closeAuth();
+    await loadDashboard();
+  }
+
+  async function doLogout() { await sb.auth.signOut(); currentUser = null; currentProfile = null; showHome(); }
+
+  async function loadDashboard() {
+    const { data: { user } } = await sb.auth.getUser();
+    if(!user) { showHome(); return; }
+    currentUser = user;
+    const { data: prof } = await sb.from('profiles').select('*').eq('id', user.id).single();
+    if(!prof) { showHome(); showToast('Profile missing'); return; }
+    currentProfile = prof;
+    selectedThemeKey = prof.theme || 'void';
+    document.getElementById('url-display').innerText = prof.username;
+    document.getElementById('edit-display').value = prof.display_name || '';
+    document.getElementById('edit-bio').value = prof.bio || '';
+    document.getElementById('edit-avatar').value = prof.avatar_url || '';
+    document.getElementById('stat-theme').innerText = prof.theme || 'void';
+    document.getElementById('stat-links').innerText = (prof.links || []).length;
+    renderThemeGrid();
+    renderLinksList();
+    showView('dashboard-view');
+  }
+
+  function renderThemeGrid() {
+    const grid = document.getElementById('theme-grid');
+    grid.innerHTML = '';
+    Object.entries(THEMES).forEach(([key, t]) => {
+      const div = document.createElement('div');
+      div.className = `theme-option ${key === selectedThemeKey ? 'selected' : ''}`;
+      div.style.background = t.bg;
+      div.style.border = `2px solid ${key === selectedThemeKey ? t.accent : '#2a2a2a'}`;
+      div.innerHTML = `<div style="height:60%;margin:12px 12px 0;background:${t.link_bg};border-radius:8px;"></div><span style="background:${t.accent};color:#fff">${t.name}</span>`;
+      div.onclick = () => { selectedThemeKey = key; renderThemeGrid(); };
+      grid.appendChild(div);
+    });
+  }
+
+  function renderLinksList() {
+    const links = currentProfile.links || [];
+    const container = document.getElementById('links-list');
+    if(!links.length) { container.innerHTML = '<div class="card" style="text-align:center;color:var(--muted);">✨ No links yet. Add your first link above.</div>'; return; }
+    container.innerHTML = links.map((l, idx) => `
+      <div class="link-item">
+        <div><div class="link-title">${esc(l.title)}</div><div class="link-url">${esc(l.url)}</div></div>
+        <button class="icon-btn danger" onclick="removeLink(${idx})">✕ Remove</button>
+      </div>
+    `).join('');
+    document.getElementById('stat-links').innerText = links.length;
+  }
+
+  async function addLink() {
+    const title = document.getElementById('link-title').value.trim();
+    const url = document.getElementById('link-url').value.trim();
+    if(!title || !url) { showToast('Fill both title and URL'); return; }
+    const newLinks = [...(currentProfile.links || []), { title, url }];
+    await sb.from('profiles').update({ links: newLinks }).eq('id', currentUser.id);
+    currentProfile.links = newLinks;
+    document.getElementById('link-title').value = '';
+    document.getElementById('link-url').value = '';
+    renderLinksList();
+    showToast('Link added ✓');
+  }
+
+  async function removeLink(idx) {
+    const newLinks = [...(currentProfile.links || [])];
+    newLinks.splice(idx, 1);
+    await sb.from('profiles').update({ links: newLinks }).eq('id', currentUser.id);
+    currentProfile.links = newLinks;
+    renderLinksList();
+    showToast('Link removed');
+  }
+
+  async function saveProfile() {
+    const display_name = document.getElementById('edit-display').value.trim();
+    const bio = document.getElementById('edit-bio').value.trim();
+    const avatar_url = document.getElementById('edit-avatar').value.trim();
+    await sb.from('profiles').update({ display_name, bio, avatar_url }).eq('id', currentUser.id);
+    currentProfile = { ...currentProfile, display_name, bio, avatar_url };
+    showToast('Profile saved ✦');
+  }
+
+  async function saveAppearance() {
+    await sb.from('profiles').update({ theme: selectedThemeKey }).eq('id', currentUser.id);
+    currentProfile.theme = selectedThemeKey;
+    document.getElementById('stat-theme').innerText = selectedThemeKey;
+    showToast('Theme updated');
+  }
+
+  function copyProfileUrl() { if(currentProfile) navigator.clipboard.writeText(`${location.origin}/${currentProfile.username}`); showToast('Copied!'); }
+  function previewProfile() { if(currentProfile) loadPublicProfile(currentProfile.username); }
+
+  async function loadPublicProfile(username) {
+    const { data: prof, error } = await sb.from('profiles').select('*').eq('username', username).single();
+    if(error || !prof) { showHome(); showToast('Profile not found'); return; }
+    const theme = THEMES[prof.theme] || THEMES.void;
+    const pv = document.getElementById('profile-view');
+    pv.style.background = theme.bg;
+    pv.style.color = theme.text;
+    const avatarWrap = document.getElementById('pub-avatar-wrap');
+    if(prof.avatar_url && prof.avatar_url.startsWith('http')) { avatarWrap.innerHTML = `<img class="profile-avatar" src="${esc(prof.avatar_url)}" alt="avatar">`; }
+    else { const letter = (prof.display_name || prof.username || 'V')[0].toUpperCase(); avatarWrap.innerHTML = `<div class="profile-avatar-placeholder" style="background:linear-gradient(135deg,${theme.accent},${theme.accent2})">${letter}</div>`; }
+    document.getElementById('pub-username').innerText = prof.display_name || prof.username;
+    document.getElementById('pub-bio').innerText = prof.bio || '';
+    const linksHtml = (prof.links || []).map(l => `<a class="profile-link-btn" href="${esc(l.url)}" target="_blank" rel="noopener" style="background:${theme.link_bg};color:${theme.link_text};border:1px solid ${theme.accent}40;">${esc(l.title)}</a>`).join('');
+    document.getElementById('pub-links').innerHTML = linksHtml || '<div style="opacity:0.4">no links yet</div>';
+    showView('profile-view');
+  }
+
+  async function routeFromUrl() {
+    const path = location.pathname.slice(1).split('?')[0];
+    if(path && path !== 'index.html' && path !== '') { await loadPublicProfile(path); } 
+    else { const { data: { user } } = await sb.auth.getUser(); if(user) await loadDashboard(); else showHome(); }
+    hideLoading();
+  }
+
+  function claimUsername() { const val = document.getElementById('claim-input').value.trim(); if(val) { document.getElementById('reg-username').value = val; openAuth('register'); } else showToast('Enter username'); }
+  function showTab(tab) { document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active')); document.getElementById(`tab-${tab}`).classList.add('active'); document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active')); Array.from(document.querySelectorAll('.sidebar-item')).find(el => el.innerText.toLowerCase().includes(tab))?.classList.add('active'); }
+  document.querySelectorAll('.sidebar-item').forEach(item => { item.addEventListener('click', () => { const txt = item.innerText.toLowerCase(); if(txt.includes('overview')) showTab('overview'); if(txt.includes('profile')) showTab('profile'); if(txt.includes('link')) showTab('links'); if(txt.includes('appearance')) showTab('appearance'); }); });
+  window.routeFromUrl = routeFromUrl; window.showHome = showHome; window.openAuth = openAuth; window.closeAuth = closeAuth; window.switchToLogin = switchToLogin; window.switchToRegister = switchToRegister; window.doLogin = doLogin; window.doRegister = doRegister; window.doLogout = doLogout; window.addLink = addLink; window.removeLink = removeLink; window.saveProfile = saveProfile; window.saveAppearance = saveAppearance; window.copyProfileUrl = copyProfileUrl; window.previewProfile = previewProfile; window.claimUsername = claimUsername; window.showTab = showTab;
+  routeFromUrl();
+</script>
+</body>
+</html>
