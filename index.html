@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>wsp.lat</title>
-<meta name="description" content="Your link-in-bio, your way.">
+<title>wsp.lat — your link hub</title>
+<meta name="description" content="Your link-in-bio, your way. Create your page in seconds.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -23,1008 +23,242 @@ img{display:block}
 a{color:inherit;text-decoration:none}
 button{font-family:'DM Sans',sans-serif}
 
-/* ─── CANVAS ─── */
+/* canvas bg */
 #bg-canvas{position:fixed;inset:0;pointer-events:none;z-index:0}
-
-/* ─── LOADER ─── */
 #loader{position:fixed;inset:0;background:var(--bg);z-index:9000;display:flex;align-items:center;justify-content:center;transition:opacity .4s}
 #loader.out{opacity:0;pointer-events:none}
 .spin{width:34px;height:34px;border:2px solid var(--b2);border-top-color:var(--acc);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* ─── TOAST ─── */
 #toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--s2);border:1px solid var(--b2);border-left:3px solid var(--acc);padding:10px 22px;border-radius:50px;font-size:13px;color:var(--t2);opacity:0;transition:all .3s;z-index:9999;pointer-events:none;white-space:nowrap}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-/* ─── PAGES ─── */
 .page{display:none;min-height:100vh;position:relative;z-index:1}
 .page.on{display:flex;flex-direction:column}
-
-/* ─── BUTTONS ─── */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 22px;border-radius:50px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap;line-height:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 22px;border-radius:50px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap}
 .btn-acc{background:var(--acc);color:#000}
 .btn-acc:hover{background:#d4ff1a;transform:translateY(-1px)}
 .btn-ghost{background:transparent;border:1px solid var(--b2);color:var(--t2)}
 .btn-ghost:hover{border-color:var(--b3);color:var(--txt)}
 .btn-red{background:rgba(255,69,69,.1);border:1px solid rgba(255,69,69,.25);color:var(--red)}
-.btn-red:hover{background:rgba(255,69,69,.2)}
 .btn-sm{padding:7px 16px;font-size:12px}
 .btn-full{width:100%;border-radius:var(--rad)}
-.btn:disabled{opacity:.4;pointer-events:none}
-
-/* ─── FIELD ─── */
 .field{margin-bottom:14px}
 .field label{display:flex;align-items:center;gap:6px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:7px}
-.field label .ico{font-size:13px}
-.fi{width:100%;background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:11px 14px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.fi{width:100%;background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:11px 14px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:14px;outline:none}
 .fi:focus{border-color:var(--acc)}
-textarea.fi{resize:vertical;min-height:80px}
-select.fi{appearance:none;cursor:pointer}
-select.fi option{background:var(--s2)}
-.fi::placeholder{color:var(--t3)}
-
-/* ─── MODALS ─── */
-.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(14px);z-index:800;align-items:center;justify-content:center;padding:20px}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.86);backdrop-filter:blur(14px);z-index:800;align-items:center;justify-content:center;padding:20px}
 .ov.on{display:flex}
-.modal{background:var(--s1);border:1px solid var(--b2);border-radius:18px;padding:38px;width:100%;max-width:420px;position:relative;animation:mIn .25s ease;max-height:90vh;overflow-y:auto}
+.modal{background:var(--s1);border:1px solid var(--b2);border-radius:18px;padding:38px;width:100%;max-width:420px;position:relative;animation:mIn .25s ease}
 @keyframes mIn{from{opacity:0;transform:scale(.95) translateY(12px)}}
-.mx{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--t3);font-size:19px;cursor:pointer;padding:4px;line-height:1}
-.mx:hover{color:var(--txt)}
+.mx{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--t3);font-size:19px;cursor:pointer}
 .mtitle{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.04em;margin-bottom:4px}
 .msub{color:var(--t2);font-size:13px;margin-bottom:28px}
 .errbox{background:rgba(255,69,69,.08);border:1px solid rgba(255,69,69,.25);border-radius:8px;padding:10px 14px;color:var(--red);font-size:13px;margin-bottom:14px;display:none}
 .errbox.on{display:block}
 .afoot{text-align:center;margin-top:14px;font-size:13px;color:var(--t2)}
 .afoot span{color:var(--acc);cursor:pointer}
-.afoot span:hover{text-decoration:underline}
-
-/* ─── NAV ─── */
-.nav{display:flex;align-items:center;justify-content:space-between;padding:18px 36px;border-bottom:1px solid var(--b1);background:rgba(7,7,7,.9);backdrop-filter:blur(14px);position:sticky;top:0;z-index:400;flex-shrink:0}
-.logo{font-family:'Bebas Neue',sans-serif;font-size:1.75rem;letter-spacing:.06em;color:var(--acc);cursor:pointer;user-select:none}
-.navr{display:flex;gap:10px;align-items:center}
-
-/* ══════════ LANDING ══════════ */
-#pg-home{align-items:center;justify-content:center;text-align:center;padding:90px 20px 60px;min-height:100vh}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:18px 36px;border-bottom:1px solid var(--b1);background:rgba(7,7,7,.9);backdrop-filter:blur(14px);position:sticky;top:0;z-index:400}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:1.75rem;letter-spacing:.06em;color:var(--acc);cursor:pointer}
+#pg-home{align-items:center;justify-content:center;text-align:center;padding:90px 20px 60px}
 .hero{max-width:640px}
-.htag{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--acc);border:1px solid rgba(200,255,0,.2);padding:5px 16px;border-radius:50px;margin-bottom:30px}
-.hh1{font-family:'Bebas Neue',sans-serif;font-size:clamp(5rem,13vw,10rem);line-height:.92;letter-spacing:.02em;margin-bottom:20px}
+.htag{display:inline-flex;gap:7px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--acc);border:1px solid rgba(200,255,0,.2);padding:5px 16px;border-radius:50px;margin-bottom:30px}
+.hh1{font-family:'Bebas Neue',sans-serif;font-size:clamp(5rem,13vw,10rem);line-height:.92;margin-bottom:20px}
 .hh1 em{color:var(--acc);font-style:normal}
-.hsub{color:var(--t2);font-size:15px;line-height:1.72;max-width:420px;margin:0 auto 42px}
-.claimbar{display:flex;align-items:center;background:var(--s1);border:1px solid var(--b2);border-radius:50px;padding:5px 5px 5px 18px;max-width:430px;margin:0 auto 20px;gap:6px;transition:border-color .2s}
-.claimbar:focus-within{border-color:var(--acc)}
-.claimbar .pre{color:var(--t3);font-size:14px;white-space:nowrap}
-.claimbar input{flex:1;min-width:0;background:transparent;border:none;outline:none;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:14px}
-.claimbar input::placeholder{color:var(--t3)}
-.hcta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-
-/* ══════════ DASHBOARD ══════════ */
-#pg-dash{flex-direction:column}
-.dbody{display:grid;grid-template-columns:230px 1fr;flex:1;min-height:0}
-.sb{border-right:1px solid var(--b1);padding:24px 12px;display:flex;flex-direction:column;gap:2px;background:var(--bg)}
+.hsub{color:var(--t2);font-size:15px;max-width:420px;margin:0 auto 42px}
+.claimbar{display:flex;align-items:center;background:var(--s1);border:1px solid var(--b2);border-radius:50px;padding:5px 5px 5px 18px;max-width:430px;margin:0 auto 20px}
+.claimbar input{flex:1;background:transparent;border:none;outline:none;color:var(--txt);padding:8px 0}
+.dbody{display:grid;grid-template-columns:230px 1fr;flex:1}
+.sb{border-right:1px solid var(--b1);padding:24px 12px}
 .sblabel{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--t3);padding:12px 12px 6px}
-.sbi{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--t2);transition:all .14s;border:1px solid transparent}
+.sbi{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--t2);border:1px solid transparent}
 .sbi:hover{background:var(--s1);color:var(--txt)}
 .sbi.on{background:var(--acc2);color:var(--acc);border-color:rgba(200,255,0,.12)}
-.sbi .i{font-size:15px;width:20px;text-align:center}
 .dmain{padding:42px 52px;overflow-y:auto;max-height:calc(100vh - 57px)}
 .tab{display:none}
 .tab.on{display:block}
-.ttitle{font-family:'Bebas Neue',sans-serif;font-size:2.3rem;letter-spacing:.04em;margin-bottom:3px}
-.tsub{color:var(--t2);font-size:13px;margin-bottom:34px}
+.ttitle{font-family:'Bebas Neue',sans-serif;font-size:2.3rem;margin-bottom:3px}
+.tsub{color:var(--t2);margin-bottom:34px}
 .card{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:24px;margin-bottom:18px}
-.chead{font-weight:700;font-size:13px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;color:var(--txt)}
 .upill{display:flex;align-items:center;gap:12px;background:var(--s2);border:1px solid var(--b2);border-radius:10px;padding:13px 16px;margin-bottom:20px}
-.upill .ut{flex:1;font-size:14px}
-.upill .ut b{color:var(--acc)}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .sbox{background:var(--s2);border:1px solid var(--b1);border-radius:10px;padding:18px;text-align:center}
-.snum{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;color:var(--acc);line-height:1}
-.slbl{font-size:11px;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;margin-top:4px}
-
-/* link rows */
-.lrow{display:flex;align-items:center;gap:12px;background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:11px 14px;margin-bottom:8px;animation:fIn .2s ease}
-@keyframes fIn{from{opacity:0;transform:translateY(4px)}}
-.linfo{flex:1;min-width:0}
-.ltitle{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lurl{font-size:12px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lbtns{display:flex;gap:6px;flex-shrink:0}
-.empty{text-align:center;padding:36px 20px;color:var(--t3);font-size:13px}
-
-/* social icons grid */
+.snum{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;color:var(--acc)}
+.lrow{display:flex;align-items:center;gap:12px;background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:11px 14px;margin-bottom:8px}
+.linfo{flex:1}
+.ltitle{font-weight:600;font-size:13px}
 .social-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .social-row{display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:9px 12px}
-.social-icon{font-size:16px;flex-shrink:0;width:22px;text-align:center}
-.social-row input{flex:1;background:transparent;border:none;outline:none;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:13px}
-.social-row input::placeholder{color:var(--t3)}
-.social-row:focus-within{border-color:var(--acc)}
-
-/* theme grid */
+.social-row input{flex:1;background:transparent;border:none;outline:none;color:var(--txt)}
 .tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px}
-.ttile{border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid var(--b1);transition:all .18s;position:relative;aspect-ratio:3/2}
+.ttile{border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid var(--b1);aspect-ratio:3/2}
 .ttile.sel{border-color:var(--acc)}
-.ttile .tn{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.68);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;color:#fff}
 .tprev{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}
 .tc{width:22px;height:22px;border-radius:50%}
-.tl{height:3px;border-radius:3px;width:60%}
-.tl2{height:3px;border-radius:3px;width:45%}
-
-/* bg effects */
-.bgopt{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:6px}
-.bgo{border:2px solid var(--b1);border-radius:10px;padding:14px 10px;cursor:pointer;text-align:center;transition:all .18s;font-size:12px;color:var(--t2)}
-.bgo:hover{border-color:var(--b3);color:var(--txt)}
+.bgopt{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.bgo{border:2px solid var(--b1);border-radius:10px;padding:14px 10px;cursor:pointer;text-align:center}
 .bgo.sel{border-color:var(--acc);color:var(--acc);background:var(--acc2)}
-.bgo .bei{font-size:20px;margin-bottom:5px}
-
-/* color picker row */
-.cprow{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:4px}
-.cpitem{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
-.cpitem label{font-size:11px;color:var(--t3);cursor:pointer}
-.cpitem input[type=color]{width:44px;height:44px;border-radius:10px;border:2px solid var(--b2);padding:3px;background:var(--s2);cursor:pointer}
-
-/* av preview */
-.avprev{width:76px;height:76px;border-radius:50%;object-fit:cover;border:2px solid var(--b2);background:var(--s2);display:block;margin:0 auto 14px}
-.avinit{width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.9rem;margin:0 auto 14px}
-
-/* username row in modal */
-.unrow{display:flex;align-items:center;background:var(--s2);border:1px solid var(--b2);border-radius:8px;overflow:hidden;transition:border-color .2s}
-.unrow:focus-within{border-color:var(--acc)}
-.unrow .unp{color:var(--t3);padding:11px 0 11px 14px;font-size:14px;white-space:nowrap}
-.unrow input{flex:1;background:transparent;border:none;outline:none;color:var(--txt);padding:11px 14px 11px 2px;font-family:'DM Sans',sans-serif;font-size:14px}
-
-/* ══════════ PUBLIC PROFILE ══════════ */
-#pg-profile{align-items:center;justify-content:center;padding:60px 20px 90px;min-height:100vh;position:relative}
-.profcard{position:relative;z-index:2;width:100%;max-width:420px;text-align:center;animation:profIn .5s cubic-bezier(.22,1,.36,1)}
-@keyframes profIn{from{opacity:0;transform:translateY(22px)}}
-.pav{width:96px;height:96px;border-radius:50%;object-fit:cover;margin:0 auto 16px;display:block;border:3px solid rgba(255,255,255,.1)}
-.pavini{width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:2.4rem;margin:0 auto 16px;border:3px solid rgba(255,255,255,.07)}
-.pname{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;letter-spacing:.04em;line-height:1;margin-bottom:4px}
-.pathandle{font-size:13px;opacity:.45;margin-bottom:12px;letter-spacing:.03em}
-.pbio{font-size:13px;line-height:1.7;opacity:.6;margin-bottom:24px;max-width:320px;margin-left:auto;margin-right:auto}
-/* social icons row */
-.psocials{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:28px}
-.psoc{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;border:1px solid rgba(255,255,255,.1);transition:all .18s;cursor:pointer;text-decoration:none}
-.psoc:hover{transform:translateY(-3px);opacity:.85}
-/* link buttons */
-.plinks{display:flex;flex-direction:column;gap:10px;width:100%}
-.plink{display:block;padding:15px 22px;border-radius:13px;font-size:14px;font-weight:600;text-align:center;border:1px solid rgba(255,255,255,.07);transition:transform .18s,opacity .18s}
-.plink:hover{transform:translateY(-2px);opacity:.88}
-.pnone{font-size:13px;opacity:.25;padding:20px 0}
-/* powered badge */
-.pbadge{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:.06em;color:rgba(255,255,255,.15)}
-.pbadge a{color:inherit}
-.pbadge a:hover{color:rgba(255,255,255,.4)}
-
-/* ─── bg effects ─── */
-#prf-rain{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:.06}
-#prf-gradient{display:none;position:fixed;inset:0;pointer-events:none;z-index:0}
-#prf-dots{display:none;position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.1}
-#prf-stars{display:none;position:fixed;inset:0;pointer-events:none;z-index:0}
-#prf-noise{display:none;position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.04}
-#prf-mesh{display:none;position:fixed;inset:0;pointer-events:none;z-index:0}
-#prf-lines{display:none;position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.08}
-
+.cprow{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px}
+.cpitem{display:flex;flex-direction:column;align-items:center;gap:6px}
+.cpitem input{width:48px;height:48px;border-radius:10px;border:2px solid var(--b2);cursor:pointer}
+#pg-profile{align-items:center;justify-content:center;padding:60px 20px 90px;min-height:100vh}
+.profcard{width:100%;max-width:420px;text-align:center}
+.pav{width:96px;height:96px;border-radius:50%;object-fit:cover;margin:0 auto 16px;border:3px solid rgba(255,255,255,.1)}
+.pavini{width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:2.4rem;margin:0 auto 16px}
+.pname{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;margin-bottom:4px}
+.plinks{display:flex;flex-direction:column;gap:10px}
+.plink{display:block;padding:15px 22px;border-radius:13px;font-weight:600;border:1px solid rgba(255,255,255,.07)}
+.psocials{display:flex;gap:10px;justify-content:center;margin-bottom:28px;flex-wrap:wrap}
+.psoc{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px}
+#prf-rain,#prf-stars,#prf-lines{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;display:none}
+#prf-gradient,#prf-dots{position:fixed;inset:0;pointer-events:none;z-index:0;display:none}
 @media(max-width:720px){
   .dbody{grid-template-columns:1fr}
-  .sb{flex-direction:row;flex-wrap:wrap;padding:10px;border-right:none;border-bottom:1px solid var(--b1)}
-  .sblabel{display:none}
-  .dmain{padding:22px;max-height:unset}
+  .dmain{padding:22px}
   .nav{padding:14px 18px}
-  .stats{grid-template-columns:1fr 1fr}
-  .social-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
-
 <canvas id="bg-canvas"></canvas>
 <div id="loader"><div class="spin"></div></div>
 <div id="toast"></div>
 
-<!-- ═══ AUTH MODAL ═══ -->
+<!-- AUTH MODAL -->
 <div class="ov" id="auth-ov">
   <div class="modal">
     <button class="mx" onclick="closeAuth()">✕</button>
-    <!-- login -->
     <div id="av-login">
       <div class="mtitle">SIGN IN</div>
-      <div class="msub">welcome back to wsp.lat</div>
+      <div class="msub">welcome back</div>
       <div class="errbox" id="le"></div>
-      <div class="field"><label>Email</label><input class="fi" id="l-em" type="email" placeholder="you@email.com"></div>
-      <div class="field"><label>Password</label><input class="fi" id="l-pw" type="password" placeholder="••••••••"></div>
-      <button class="btn btn-acc btn-full" style="margin-top:8px" onclick="doLogin()">Sign In →</button>
+      <div class="field"><label>Email</label><input class="fi" id="l-em" type="email"></div>
+      <div class="field"><label>Password</label><input class="fi" id="l-pw" type="password"></div>
+      <button class="btn btn-acc btn-full" onclick="doLogin()">Sign In →</button>
       <div class="afoot">no account? <span onclick="swapAuth('reg')">create one</span></div>
     </div>
-    <!-- register -->
     <div id="av-reg" style="display:none">
       <div class="mtitle">JOIN</div>
-      <div class="msub">claim your wsp.lat/username</div>
+      <div class="msub">claim wsp.lat/username</div>
       <div class="errbox" id="re"></div>
-      <div class="field">
-        <label>Your URL</label>
-        <div class="unrow">
-          <span class="unp">wsp.lat/</span>
-          <input id="r-un" type="text" placeholder="yourname" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_.]/g,'')">
-        </div>
-      </div>
-      <div class="field"><label>Email</label><input class="fi" id="r-em" type="email" placeholder="you@email.com"></div>
-      <div class="field"><label>Password</label><input class="fi" id="r-pw" type="password" placeholder="min 6 chars"></div>
-      <button class="btn btn-acc btn-full" style="margin-top:8px" onclick="doRegister()">Create Account →</button>
+      <div class="field"><label>Username</label><div class="unrow" style="display:flex;background:var(--s2);border-radius:8px;"><span style="padding:11px 0 11px 14px;color:var(--t3)">wsp.lat/</span><input id="r-un" style="flex:1;background:transparent;border:none;outline:none;padding:11px 14px" placeholder="yourname" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_.]/g,'')"></div></div>
+      <div class="field"><label>Email</label><input class="fi" id="r-em" type="email"></div>
+      <div class="field"><label>Password</label><input class="fi" id="r-pw" type="password"></div>
+      <button class="btn btn-acc btn-full" onclick="doRegister()">Create Account →</button>
       <div class="afoot">have an account? <span onclick="swapAuth('login')">sign in</span></div>
     </div>
   </div>
 </div>
 
-<!-- ═══ ADD LINK MODAL ═══ -->
+<!-- ADD LINK MODAL -->
 <div class="ov" id="link-ov">
   <div class="modal">
     <button class="mx" onclick="closeLinkOv()">✕</button>
     <div class="mtitle">ADD LINK</div>
-    <div class="msub">add a button to your profile</div>
     <div class="errbox" id="lke"></div>
-    <div class="field"><label>Button Label</label><input class="fi" id="lk-t" type="text" placeholder="My YouTube"></div>
-    <div class="field"><label>URL</label><input class="fi" id="lk-u" type="url" placeholder="https://..."></div>
-    <button class="btn btn-acc btn-full" style="margin-top:8px" onclick="addLink()">Add Link</button>
+    <div class="field"><label>Label</label><input class="fi" id="lk-t"></div>
+    <div class="field"><label>URL</label><input class="fi" id="lk-u" type="url"></div>
+    <button class="btn btn-acc btn-full" onclick="addLink()">Add Link</button>
   </div>
 </div>
 
-<!-- ═══════════════════════
-     LANDING
-═══════════════════════ -->
+<!-- LANDING -->
 <div class="page" id="pg-home">
-  <nav class="nav">
-    <div class="logo">WSP.LAT</div>
-    <div class="navr">
-      <button class="btn btn-ghost btn-sm" onclick="openAuth('login')">Sign In</button>
-      <button class="btn btn-acc btn-sm" onclick="openAuth('reg')">Get Started</button>
-    </div>
-  </nav>
-  <div class="hero">
-    <div class="htag">✦ link-in-bio for real ones</div>
-    <h1 class="hh1">YOUR<br><em>LINK.</em><br>YOUR WAY.</h1>
-    <p class="hsub">One page, everything you are. Custom themes, your socials, your links — all at wsp.lat/you.</p>
-    <div class="claimbar">
-      <span class="pre">wsp.lat/</span>
-      <input id="claim-in" type="text" placeholder="yourname" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_.]/g,'')">
-      <button class="btn btn-acc btn-sm" onclick="claimIt()">Claim →</button>
-    </div>
-    <div class="hcta">
-      <button class="btn btn-acc" onclick="openAuth('reg')">Create Your Profile</button>
-      <button class="btn btn-ghost" onclick="openAuth('login')">Sign In</button>
-    </div>
-  </div>
+  <nav class="nav"><div class="logo">WSP.LAT</div><div class="navr"><button class="btn btn-ghost btn-sm" onclick="openAuth('login')">Sign In</button><button class="btn btn-acc btn-sm" onclick="openAuth('reg')">Get Started</button></div></nav>
+  <div class="hero"><div class="htag">✦ link-in-bio for real ones</div><h1 class="hh1">YOUR<br><em>LINK.</em><br>YOUR WAY.</h1><p class="hsub">One page, everything you are. Custom themes, socials, links — at wsp.lat/you.</p><div class="claimbar"><span>wsp.lat/</span><input id="claim-in" placeholder="yourname" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_.]/g,'')"><button class="btn btn-acc btn-sm" onclick="claimIt()">Claim →</button></div><div class="hcta"><button class="btn btn-acc" onclick="openAuth('reg')">Create Your Profile</button><button class="btn btn-ghost" onclick="openAuth('login')">Sign In</button></div></div>
 </div>
 
-<!-- ═══════════════════════
-     DASHBOARD
-═══════════════════════ -->
+<!-- DASHBOARD -->
 <div class="page" id="pg-dash">
-  <nav class="nav">
-    <div class="logo">WSP.LAT</div>
-    <div class="navr">
-      <button class="btn btn-ghost btn-sm" onclick="openMyProfile()">↗ My Profile</button>
-      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign Out</button>
-    </div>
-  </nav>
-
+  <nav class="nav"><div class="logo">WSP.LAT</div><div class="navr"><button class="btn btn-ghost btn-sm" onclick="openMyProfile()">↗ My Profile</button><button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign Out</button></div></nav>
   <div class="dbody">
-    <div class="sb">
-      <div class="sblabel">Dashboard</div>
-      <div class="sbi on" onclick="showTab(this,'overview')"><span class="i">⚡</span>Overview</div>
-      <div class="sbi" onclick="showTab(this,'profile')"><span class="i">👤</span>Profile</div>
-      <div class="sbi" onclick="showTab(this,'socials')"><span class="i">🌐</span>Socials</div>
-      <div class="sbi" onclick="showTab(this,'links')"><span class="i">🔗</span>Links</div>
-      <div class="sbi" onclick="showTab(this,'appear')"><span class="i">🎨</span>Appearance</div>
-    </div>
-
+    <div class="sb"><div class="sblabel">Dashboard</div><div class="sbi on" onclick="showTab(this,'overview')">⚡ Overview</div><div class="sbi" onclick="showTab(this,'profile')">👤 Profile</div><div class="sbi" onclick="showTab(this,'socials')">🌐 Socials</div><div class="sbi" onclick="showTab(this,'links')">🔗 Links</div><div class="sbi" onclick="showTab(this,'appear')">🎨 Appearance</div></div>
     <div class="dmain">
-
-      <!-- OVERVIEW -->
-      <div class="tab on" id="tab-overview">
-        <div class="ttitle">OVERVIEW</div>
-        <div class="tsub">your profile at a glance</div>
-        <div class="upill">
-          <span class="ut">wsp.lat/<b id="ov-slug">—</b></span>
-          <button class="btn btn-ghost btn-sm" onclick="copyUrl()">Copy URL</button>
-          <button class="btn btn-acc btn-sm" onclick="openMyProfile()">View →</button>
-        </div>
-        <div class="stats">
-          <div class="sbox"><div class="snum" id="ov-lcount">0</div><div class="slbl">Links</div></div>
-          <div class="sbox"><div class="snum" id="ov-scount">0</div><div class="slbl">Socials</div></div>
-          <div class="sbox"><div class="snum" id="ov-theme" style="font-size:1rem;color:var(--t2)">lime</div><div class="slbl">Theme</div></div>
-        </div>
-      </div>
-
-      <!-- PROFILE -->
-      <div class="tab" id="tab-profile">
-        <div class="ttitle">PROFILE</div>
-        <div class="tsub">your name, bio, and avatar</div>
-        <div class="card">
-          <div id="av-wrap" style="margin-bottom:10px"></div>
-          <div class="field"><label>Display Name</label><input class="fi" id="p-name" type="text" placeholder="Your Name" oninput="refreshAv()"></div>
-          <div class="field"><label>Bio</label><textarea class="fi" id="p-bio" placeholder="tell people what's up..."></textarea></div>
-          <div class="field"><label>Avatar URL <span style="font-size:10px;color:var(--t3)">(optional — imgur, discord cdn, etc)</span></label><input class="fi" id="p-av" type="url" placeholder="https://..." oninput="refreshAv()"></div>
-          <button class="btn btn-acc" onclick="saveProfile()">Save Profile</button>
-        </div>
-      </div>
-
-      <!-- SOCIALS -->
-      <div class="tab" id="tab-socials">
-        <div class="ttitle">SOCIALS</div>
-        <div class="tsub">add your social media — they show as icons on your profile</div>
-        <div class="card">
-          <div class="social-grid" id="social-fields"></div>
-          <button class="btn btn-acc" style="margin-top:18px" onclick="saveSocials()">Save Socials</button>
-        </div>
-      </div>
-
-      <!-- LINKS -->
-      <div class="tab" id="tab-links">
-        <div class="ttitle">LINKS</div>
-        <div class="tsub">custom link buttons on your profile</div>
-        <div class="card">
-          <div class="chead">My Links <button class="btn btn-acc btn-sm" onclick="openLinkOv()">+ Add Link</button></div>
-          <div id="links-list"></div>
-        </div>
-      </div>
-
-      <!-- APPEARANCE -->
-      <div class="tab" id="tab-appear">
-        <div class="ttitle">APPEARANCE</div>
-        <div class="tsub">customize how your profile looks</div>
-
-        <div class="card">
-          <div class="chead">Theme Presets</div>
-          <div class="tgrid" id="tgrid"></div>
-        </div>
-
-        <div class="card">
-          <div class="chead">Custom Colors</div>
-          <div class="cprow">
-            <div class="cpitem"><input type="color" id="cc-bg" value="#070707"><label>Background</label></div>
-            <div class="cpitem"><input type="color" id="cc-txt" value="#f0f0f0"><label>Text</label></div>
-            <div class="cpitem"><input type="color" id="cc-acc" value="#c8ff00"><label>Accent</label></div>
-            <div class="cpitem"><input type="color" id="cc-lbg" value="#111111"><label>Link BG</label></div>
-            <div class="cpitem"><input type="color" id="cc-ltxt" value="#f0f0f0"><label>Link Text</label></div>
-          </div>
-          <button class="btn btn-ghost btn-sm" style="margin-top:16px" onclick="useCustom()">Apply Custom Colors</button>
-        </div>
-
-        <div class="card">
-          <div class="chead">Background Effect</div>
-          <div class="bgopt" id="bgopt"></div>
-        </div>
-
-        <button class="btn btn-acc" onclick="saveAppear()">Save Appearance</button>
-      </div>
-
+      <div class="tab on" id="tab-overview"><div class="ttitle">OVERVIEW</div><div class="upill"><span>wsp.lat/<b id="ov-slug">—</b></span><button class="btn btn-ghost btn-sm" onclick="copyUrl()">Copy URL</button><button class="btn btn-acc btn-sm" onclick="openMyProfile()">View →</button></div><div class="stats"><div class="sbox"><div class="snum" id="ov-lcount">0</div><div class="slbl">Links</div></div><div class="sbox"><div class="snum" id="ov-scount">0</div><div class="slbl">Socials</div></div><div class="sbox"><div class="snum" id="ov-theme" style="font-size:1rem">lime</div><div class="slbl">Theme</div></div></div></div>
+      <div class="tab" id="tab-profile"><div class="ttitle">PROFILE</div><div class="card"><div id="av-wrap"></div><div class="field"><label>Display Name</label><input class="fi" id="p-name" oninput="refreshAv()"></div><div class="field"><label>Bio</label><textarea class="fi" id="p-bio" rows="2"></textarea></div><div class="field"><label>Avatar URL</label><input class="fi" id="p-av" oninput="refreshAv()"></div><button class="btn btn-acc" onclick="saveProfile()">Save Profile</button></div></div>
+      <div class="tab" id="tab-socials"><div class="ttitle">SOCIALS</div><div class="card"><div class="social-grid" id="social-fields"></div><button class="btn btn-acc" onclick="saveSocials()">Save Socials</button></div></div>
+      <div class="tab" id="tab-links"><div class="ttitle">LINKS</div><div class="card"><div class="chead" style="display:flex;justify-content:space-between"><span>My Links</span><button class="btn btn-acc btn-sm" onclick="openLinkOv()">+ Add Link</button></div><div id="links-list"></div></div></div>
+      <div class="tab" id="tab-appear"><div class="ttitle">APPEARANCE</div><div class="card"><div class="chead">Themes</div><div class="tgrid" id="tgrid"></div></div><div class="card"><div class="chead">Custom Colors</div><div class="cprow"><div class="cpitem"><input type="color" id="cc-bg" value="#070707"><label>BG</label></div><div class="cpitem"><input type="color" id="cc-txt" value="#f0f0f0"><label>Text</label></div><div class="cpitem"><input type="color" id="cc-acc" value="#c8ff00"><label>Accent</label></div><div class="cpitem"><input type="color" id="cc-lbg" value="#111111"><label>Link BG</label></div></div><button class="btn btn-ghost btn-sm" style="margin-top:12px" onclick="useCustom()">Apply Custom</button></div><div class="card"><div class="chead">Background Effect</div><div class="bgopt" id="bgopt"></div></div><button class="btn btn-acc" onclick="saveAppear()">Save Appearance</button></div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════
-     PUBLIC PROFILE
-═══════════════════════ -->
+<!-- PUBLIC PROFILE -->
 <div class="page" id="pg-profile">
-  <canvas id="prf-rain"></canvas>
-  <div id="prf-gradient"></div>
-  <div id="prf-dots"></div>
-  <canvas id="prf-stars"></canvas>
-  <div id="prf-noise"></div>
-  <svg id="prf-mesh" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" style="display:none;position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0"></svg>
-  <canvas id="prf-lines"></canvas>
-
-  <div class="profcard">
-    <div id="pf-av"></div>
-    <div class="pname" id="pf-name"></div>
-    <div class="pathandle" id="pf-handle"></div>
-    <div class="pbio" id="pf-bio"></div>
-    <div class="psocials" id="pf-socials"></div>
-    <div class="plinks" id="pf-links"></div>
-  </div>
-  <div class="pbadge">powered by <a href="/" onclick="go('home');return false">wsp.lat</a></div>
+  <canvas id="prf-rain"></canvas><div id="prf-gradient"></div><div id="prf-dots"></div><canvas id="prf-stars"></canvas><canvas id="prf-lines"></canvas>
+  <div class="profcard"><div id="pf-av"></div><div class="pname" id="pf-name"></div><div class="pathandle" id="pf-handle"></div><div class="pbio" id="pf-bio"></div><div class="psocials" id="pf-socials"></div><div class="plinks" id="pf-links"></div></div>
+  <div class="pbadge" style="position:fixed;bottom:18px;left:50%;transform:translateX(-50%);font-size:11px;opacity:.3">powered by wsp.lat</div>
 </div>
 
 <script>
-// ════════════════════════════════════
-//  SUPABASE
-// ════════════════════════════════════
-const DB = supabase.createClient(
-  'https://dyxxpuirsuqtuehvijdf.supabase.co',
-  'sb_publishable_8IaNO6bOuQHZdVyAPeP1Qg_sjjcGcVy'
-);
+// SUPABASE (same credentials as given)
+const DB = supabase.createClient('https://dyxxpuirsuqtuehvijdf.supabase.co', 'sb_publishable_8IaNO6bOuQHZdVyAPeP1Qg_sjjcGcVy');
 
-// ════════════════════════════════════
-//  CONSTANTS
-// ════════════════════════════════════
+// CONSTANTS
 const SOCIALS_DEF = [
-  { key:'twitter',   label:'Twitter / X',  icon:'𝕏',   base:'https://twitter.com/',   ph:'username' },
-  { key:'instagram', label:'Instagram',     icon:'📸',  base:'https://instagram.com/', ph:'username' },
-  { key:'tiktok',    label:'TikTok',        icon:'🎵',  base:'https://tiktok.com/@',   ph:'username' },
-  { key:'youtube',   label:'YouTube',       icon:'▶️',  base:'https://youtube.com/@',  ph:'channel' },
-  { key:'discord',   label:'Discord',       icon:'💬',  base:'https://discord.gg/',    ph:'invite or username' },
-  { key:'twitch',    label:'Twitch',        icon:'🟣',  base:'https://twitch.tv/',     ph:'username' },
-  { key:'github',    label:'GitHub',        icon:'🐙',  base:'https://github.com/',    ph:'username' },
-  { key:'snapchat',  label:'Snapchat',      icon:'👻',  base:'https://snapchat.com/add/', ph:'username' },
-  { key:'spotify',   label:'Spotify',       icon:'🎧',  base:'https://open.spotify.com/user/', ph:'user id' },
-  { key:'telegram',  label:'Telegram',      icon:'✈️',  base:'https://t.me/',          ph:'username' },
-  { key:'email',     label:'Email',         icon:'✉️',  base:'mailto:',                ph:'your@email.com' },
-  { key:'website',   label:'Website',       icon:'🌐',  base:'',                       ph:'https://yoursite.com' },
+  { key:'twitter', icon:'𝕏', base:'https://twitter.com/', ph:'username' },{ key:'instagram', icon:'📸', base:'https://instagram.com/', ph:'handle' },
+  { key:'tiktok', icon:'🎵', base:'https://tiktok.com/@', ph:'@user' },{ key:'youtube', icon:'▶️', base:'https://youtube.com/@', ph:'channel' },
+  { key:'github', icon:'🐙', base:'https://github.com/', ph:'username' },{ key:'discord', icon:'💬', base:'https://discord.gg/', ph:'invite' },
+  { key:'twitch', icon:'🟣', base:'https://twitch.tv/', ph:'name' },{ key:'website', icon:'🌐', base:'', ph:'https://' }
 ];
+const THEMES = { lime:{ bg:'#070707',txt:'#f0f0f0',acc:'#c8ff00',lbg:'#111' }, void:{ bg:'#000',txt:'#fff',acc:'#ff3cac',lbg:'#0d0d0d' }, ice:{ bg:'#020c18',txt:'#c8eaff',acc:'#5bc8ff',lbg:'#071422' }, sakura:{ bg:'#14060e',txt:'#ffd6e7',acc:'#ff6ba8',lbg:'#1f0a14' }, forest:{ bg:'#060e06',txt:'#bce8b0',acc:'#5cd65c',lbg:'#0a180a' }, solar:{ bg:'#0e0800',txt:'#ffe082',acc:'#ffaa00',lbg:'#1a1100' }, cyber:{ bg:'#000716',txt:'#00ffd4',acc:'#ff004f',lbg:'#000e28' } };
+const BG_EFFECTS = [{ key:'rain', label:'Rain', icon:'🌧️'},{ key:'stars', label:'Stars', icon:'✨'},{ key:'gradient', label:'Gradient', icon:'🌈'},{ key:'dots', label:'Dots', icon:'⬤'},{ key:'lines', label:'Lines', icon:'▬'},{ key:'none', label:'Clean', icon:'☐'}];
 
-const THEMES = {
-  lime:   { bg:'#070707', txt:'#f0f0f0', acc:'#c8ff00', lbg:'#111',    ltxt:'#f0f0f0' },
-  void:   { bg:'#000000', txt:'#ffffff', acc:'#ff3cac', lbg:'#0d0d0d', ltxt:'#ffffff' },
-  ice:    { bg:'#020c18', txt:'#c8eaff', acc:'#5bc8ff', lbg:'#071422', ltxt:'#c8eaff' },
-  sakura: { bg:'#14060e', txt:'#ffd6e7', acc:'#ff6ba8', lbg:'#1f0a14', ltxt:'#ffd6e7' },
-  forest: { bg:'#060e06', txt:'#bce8b0', acc:'#5cd65c', lbg:'#0a180a', ltxt:'#bce8b0' },
-  solar:  { bg:'#0e0800', txt:'#ffe082', acc:'#ffaa00', lbg:'#1a1100', ltxt:'#ffe082' },
-  cyber:  { bg:'#000716', txt:'#00ffd4', acc:'#ff004f', lbg:'#000e28', ltxt:'#00ffd4' },
-  grape:  { bg:'#0c041d', txt:'#e0c3fc', acc:'#a855f7', lbg:'#140630', ltxt:'#e0c3fc' },
-  clay:   { bg:'#f0ebe5', txt:'#1a1a1a', acc:'#c0553a', lbg:'#e4dcd5', ltxt:'#1a1a1a' },
-  mono:   { bg:'#0d0d0d', txt:'#cccccc', acc:'#ffffff', lbg:'#1a1a1a', ltxt:'#cccccc' },
-  rose:   { bg:'#100608', txt:'#f5c0c0', acc:'#ff6060', lbg:'#1c0c0c', ltxt:'#f5c0c0' },
-  ocean:  { bg:'#030d14', txt:'#a8d8ea', acc:'#00b4d8', lbg:'#051824', ltxt:'#a8d8ea' },
-};
+let USER=null, PROF=null, PICKED='lime', PICKED_EFF='rain', rfxCleanup=null, gradInterval=null;
 
-const BG_EFFECTS = [
-  { key:'rain',     label:'Katakana Rain', icon:'🌧️' },
-  { key:'stars',    label:'Stars',         icon:'✨' },
-  { key:'gradient', label:'Gradient Flow', icon:'🌈' },
-  { key:'dots',     label:'Dot Grid',      icon:'⬤' },
-  { key:'lines',    label:'Scan Lines',    icon:'▬' },
-  { key:'none',     label:'Clean',         icon:'☐' },
-];
+// HELPERS
+function v(id){return document.getElementById(id).value.trim()}
+function setText(id,t){let e=document.getElementById(id);if(e)e.textContent=t;}
+function x(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+let toastT;function toast(m){let e=document.getElementById('toast');e.textContent=m;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),3000);}
 
-// ════════════════════════════════════
-//  STATE
-// ════════════════════════════════════
-let USER=null, PROF=null, PICKED='lime', PICKED_EFF='rain';
-let rfxHandle=null, gradTimer=null;
-
-// ════════════════════════════════════
-//  BACKGROUND RAIN (landing/dashboard)
-// ════════════════════════════════════
-(function landingRain(){
-  const c=document.getElementById('bg-canvas');
-  const ctx=c.getContext('2d');
-  const CH='アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン゛゜ァィゥェォッャュョヴ';
-  let drops=[],cols=0;
-  function resize(){
-    c.width=innerWidth;c.height=innerHeight;
-    cols=Math.floor(c.width/28);
-    drops=Array.from({length:cols},()=>Math.random()*-80);
-  }
-  resize();addEventListener('resize',resize);
-  c.style.opacity='.04';
-  ;(function draw(){
-    ctx.fillStyle='rgba(0,0,0,.05)';ctx.fillRect(0,0,c.width,c.height);
-    ctx.fillStyle='#fff';ctx.font='14px monospace';
-    drops.forEach((y,i)=>{
-      ctx.fillText(CH[Math.floor(Math.random()*CH.length)],i*28,y*18);
-      if(y*18>c.height&&Math.random()>.975)drops[i]=0;
-      drops[i]++;
-    });
-    requestAnimationFrame(draw);
-  })();
-})();
-
-// ════════════════════════════════════
-//  PAGES / ROUTER
-// ════════════════════════════════════
-function go(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
-  const el=document.getElementById('pg-'+id);
-  if(el)el.classList.add('on');
-}
-
+// ROUTING & BOOT
 async function boot(){
-  const slug=location.pathname.replace(/^\/+/,'').replace(/\/+$/,'').split('?')[0].split('#')[0];
-  if(slug && slug!=='index.html'){
-    await showPublicProfile(slug);
-  } else {
-    const {data:{user}}=await DB.auth.getUser();
-    if(user){USER=user;await loadDash();}
-    else go('home');
-  }
-  hideLoader();
+  let slug = location.pathname.slice(1).split('?')[0].split('#')[0];
+  if(slug && slug!=='index.html'){ await showPublicProfile(slug); }
+  else{ let {data:{user}}=await DB.auth.getUser(); if(user){USER=user; await loadDash();} else go('home'); }
+  document.getElementById('loader').classList.add('out'); setTimeout(()=>document.getElementById('loader').style.display='none',500);
 }
+function go(id){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('on')); document.getElementById('pg-'+id).classList.add('on'); }
 
-function hideLoader(){
-  const l=document.getElementById('loader');
-  l.classList.add('out');
-  setTimeout(()=>l.style.display='none',500);
-}
+// AUTH WITH EMAIL VERIFICATION
+async function doLogin(){ let em=v('l-em'),pw=v('l-pw'),err=document.getElementById('le'); err.classList.remove('on'); let {data,error}=await DB.auth.signInWithPassword({email:em,password:pw}); if(error){err.textContent=error.message;err.classList.add('on');return;} USER=data.user; closeAuth(); await loadDash(); }
+async function doRegister(){ let un=v('r-un'),em=v('r-em'),pw=v('r-pw'),err=document.getElementById('re'); err.classList.remove('on'); if(un.length<3){err.textContent='Username min 3 chars';err.classList.add('on');return;} if(pw.length<6){err.textContent='Password min 6 chars';err.classList.add('on');return;} let {data:ex}=await DB.from('profiles').select('id').eq('username',un).maybeSingle(); if(ex){err.textContent='Username taken';err.classList.add('on');return;} let {data,error}=await DB.auth.signUp({email:em,password:pw,options:{data:{username:un}}}); if(error){err.textContent=error.message;err.classList.add('on');return;} await DB.from('profiles').insert({id:data.user.id,username:un,display_name:un,bio:'',avatar_url:'',theme:'lime',custom_colors:null,bg_effect:'rain',links:[],socials:{}}); toast('✅ Verification email sent! Check your inbox and confirm.'); closeAuth(); }
+function openAuth(mode){ swapAuth(mode); document.getElementById('auth-ov').classList.add('on'); }
+function closeAuth(){ document.getElementById('auth-ov').classList.remove('on'); }
+function swapAuth(m){ document.getElementById('av-login').style.display=m==='login'?'block':'none'; document.getElementById('av-reg').style.display=m==='reg'?'block':'none'; }
+async function doLogout(){ await DB.auth.signOut(); USER=null; PROF=null; history.pushState({},'','/'); go('home'); }
 
-// ════════════════════════════════════
-//  AUTH
-// ════════════════════════════════════
-function openAuth(mode){
-  swapAuth(mode);
-  document.getElementById('auth-ov').classList.add('on');
-}
-function closeAuth(){document.getElementById('auth-ov').classList.remove('on');}
-function swapAuth(m){
-  document.getElementById('av-login').style.display=m==='login'?'block':'none';
-  document.getElementById('av-reg').style.display=m==='reg'?'block':'none';
-  document.getElementById('le').classList.remove('on');
-  document.getElementById('re').classList.remove('on');
-}
-
-async function doLogin(){
-  const em=v('l-em'), pw=v('l-pw'), err=document.getElementById('le');
-  err.classList.remove('on');
-  const {data,error}=await DB.auth.signInWithPassword({email:em,password:pw});
-  if(error){err.textContent=error.message;err.classList.add('on');return;}
-  USER=data.user;closeAuth();await loadDash();
-}
-
-async function doRegister(){
-  const un=v('r-un'),em=v('r-em'),pw=v('r-pw');
-  const err=document.getElementById('re');err.classList.remove('on');
-  if(un.length<2){err.textContent='Username must be 2+ chars';err.classList.add('on');return;}
-  if(!em){err.textContent='Email required';err.classList.add('on');return;}
-  if(pw.length<6){err.textContent='Password must be 6+ chars';err.classList.add('on');return;}
-  // check taken
-  const {data:ex}=await DB.from('profiles').select('id').eq('username',un).maybeSingle();
-  if(ex){err.textContent='Username already taken';err.classList.add('on');return;}
-  const {data,error}=await DB.auth.signUp({email:em,password:pw});
-  if(error){err.textContent=error.message;err.classList.add('on');return;}
-  // create profile row
-  await DB.from('profiles').insert({
-    id:data.user.id, username:un, display_name:un, bio:'',
-    avatar_url:'', theme:'lime', custom_colors:null, bg_effect:'rain',
-    links:[], socials:{}
-  });
-  USER=data.user;closeAuth();toast('Welcome to wsp.lat ✦');await loadDash();
-}
-
-async function doLogout(){
-  await DB.auth.signOut();
-  USER=null;PROF=null;
-  history.pushState({},'','/');
-  go('home');
-}
-
-// ════════════════════════════════════
-//  DASHBOARD
-// ════════════════════════════════════
-async function loadDash(){
-  const {data}=await DB.from('profiles').select('*').eq('id',USER.id).single();
-  if(!data){go('home');return;}
-  PROF=data;PICKED=PROF.theme||'lime';PICKED_EFF=PROF.bg_effect||'rain';
-  fillDash();go('dash');
-}
-
-function fillDash(){
-  set('ov-slug',PROF.username);
-  set('ov-lcount',(PROF.links||[]).length);
-  set('ov-scount',Object.values(PROF.socials||{}).filter(Boolean).length);
-  set('ov-theme',PROF.theme||'lime');
-  document.getElementById('p-name').value=PROF.display_name||'';
-  document.getElementById('p-bio').value=PROF.bio||'';
-  document.getElementById('p-av').value=PROF.avatar_url||'';
-  document.getElementById('bg-effect')?document.getElementById('bg-effect').value=PROF.bg_effect||'rain':null;
-  if(PROF.custom_colors){
-    const c=PROF.custom_colors;
-    document.getElementById('cc-bg').value=c.bg||'#070707';
-    document.getElementById('cc-txt').value=c.txt||'#f0f0f0';
-    document.getElementById('cc-acc').value=c.acc||'#c8ff00';
-    document.getElementById('cc-lbg').value=c.lbg||'#111111';
-    document.getElementById('cc-ltxt').value=c.ltxt||'#f0f0f0';
-  }
-  refreshAv();buildSocialFields();buildThemeGrid();buildBgOpts();renderLinks();
-}
-
-function showTab(el,name){
-  document.querySelectorAll('.sbi').forEach(i=>i.classList.remove('on'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
-  el.classList.add('on');
-  document.getElementById('tab-'+name).classList.add('on');
-}
-
-// ── Profile ──
-function refreshAv(){
-  const wrap=document.getElementById('av-wrap');
-  const url=document.getElementById('p-av').value.trim();
-  const name=(document.getElementById('p-name').value.trim()||PROF?.display_name||PROF?.username||'?')[0].toUpperCase();
-  const t=THEMES[PICKED]||THEMES.lime;
-  wrap.innerHTML=url
-    ?`<img class="avprev" src="${x(url)}" onerror="this.style.display='none'">`
-    :`<div class="avinit" style="background:linear-gradient(135deg,${t.acc},${t.bg});color:${t.acc}">${name}</div>`;
-}
-
-async function saveProfile(){
-  const dn=v('p-name'),bio=v('p-bio'),av=v('p-av');
-  const {error}=await DB.from('profiles').update({display_name:dn,bio,avatar_url:av}).eq('id',USER.id);
-  if(error){toast('Error: '+error.message);return;}
-  PROF={...PROF,display_name:dn,bio,avatar_url:av};
-  toast('Profile saved ✦');
-}
-
-// ── Socials ──
-function buildSocialFields(){
-  const soc=PROF.socials||{};
-  document.getElementById('social-fields').innerHTML=SOCIALS_DEF.map(s=>`
-    <div class="social-row">
-      <span class="social-icon">${s.icon}</span>
-      <input id="soc-${s.key}" type="text" placeholder="${s.ph}" value="${x(soc[s.key]||'')}">
-    </div>`).join('');
-}
-
-async function saveSocials(){
-  const soc={};
-  SOCIALS_DEF.forEach(s=>{const val=v('soc-'+s.key);if(val)soc[s.key]=val;});
-  const {error}=await DB.from('profiles').update({socials:soc}).eq('id',USER.id);
-  if(error){toast('Error: '+error.message);return;}
-  PROF.socials=soc;
-  set('ov-scount',Object.values(soc).filter(Boolean).length);
-  toast('Socials saved ✦');
-}
-
-// ── Links ──
-function openLinkOv(){
-  document.getElementById('lk-t').value='';
-  document.getElementById('lk-u').value='';
-  document.getElementById('lke').classList.remove('on');
-  document.getElementById('link-ov').classList.add('on');
-}
+// DASHBOARD
+async function loadDash(){ let {data}=await DB.from('profiles').select('*').eq('id',USER.id).single(); if(!data){go('home');return;} PROF=data; PICKED=PROF.theme||'lime'; PICKED_EFF=PROF.bg_effect||'rain'; fillDash(); go('dash'); }
+function fillDash(){ setText('ov-slug',PROF.username); setText('ov-lcount',(PROF.links||[]).length); setText('ov-scount',Object.values(PROF.socials||{}).filter(Boolean).length); setText('ov-theme',PROF.theme||'lime'); document.getElementById('p-name').value=PROF.display_name||''; document.getElementById('p-bio').value=PROF.bio||''; document.getElementById('p-av').value=PROF.avatar_url||''; if(PROF.custom_colors){ let c=PROF.custom_colors; document.getElementById('cc-bg').value=c.bg||'#070707'; document.getElementById('cc-txt').value=c.txt||'#f0f0f0'; document.getElementById('cc-acc').value=c.acc||'#c8ff00'; document.getElementById('cc-lbg').value=c.lbg||'#111'; } refreshAv(); buildSocialFields(); buildThemeGrid(); buildBgOpts(); renderLinks(); }
+function showTab(el,name){ document.querySelectorAll('.sbi').forEach(i=>i.classList.remove('on')); document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on')); el.classList.add('on'); document.getElementById('tab-'+name).classList.add('on'); }
+function refreshAv(){ let wrap=document.getElementById('av-wrap'); let url=document.getElementById('p-av').value.trim(); let name=(document.getElementById('p-name').value.trim()||PROF?.display_name||PROF?.username||'?')[0].toUpperCase(); let t=THEMES[PICKED]||THEMES.lime; wrap.innerHTML=url?`<img class="avprev" style="width:76px;height:76px;border-radius:50%;margin:0 auto 14px;display:block" src="${x(url)}" onerror="this.style.display='none'">`:`<div style="width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,${t.acc},${t.bg});color:${t.acc};margin:0 auto 14px;font-size:2rem">${name}</div>`; }
+async function saveProfile(){ let dn=v('p-name'),bio=v('p-bio'),av=v('p-av'); let {error}=await DB.from('profiles').update({display_name:dn,bio,avatar_url:av}).eq('id',USER.id); if(error){toast(error.message);return;} PROF={...PROF,display_name:dn,bio,avatar_url:av}; toast('Profile saved'); }
+function buildSocialFields(){ let soc=PROF.socials||{}; document.getElementById('social-fields').innerHTML=SOCIALS_DEF.map(s=>`<div class="social-row"><span class="social-icon">${s.icon}</span><input id="soc-${s.key}" placeholder="${s.ph}" value="${x(soc[s.key]||'')}"></div>`).join(''); }
+async function saveSocials(){ let soc={}; SOCIALS_DEF.forEach(s=>{let val=v('soc-'+s.key);if(val)soc[s.key]=val;}); await DB.from('profiles').update({socials:soc}).eq('id',USER.id); PROF.socials=soc; setText('ov-scount',Object.values(soc).filter(Boolean).length); toast('Socials saved'); }
+function openLinkOv(){ document.getElementById('lk-t').value='';document.getElementById('lk-u').value='';document.getElementById('lke').classList.remove('on');document.getElementById('link-ov').classList.add('on');}
 function closeLinkOv(){document.getElementById('link-ov').classList.remove('on');}
+async function addLink(){ let title=v('lk-t'),url=v('lk-u'),err=document.getElementById('lke'); err.classList.remove('on'); if(!title||!url){err.textContent='All fields required';err.classList.add('on');return;} let links=[...(PROF.links||[]),{title,url,id:Date.now()}]; await DB.from('profiles').update({links}).eq('id',USER.id); PROF.links=links; closeLinkOv(); renderLinks(); setText('ov-lcount',links.length); toast('Link added'); }
+async function delLink(id){ let links=(PROF.links||[]).filter(l=>l.id!==id); await DB.from('profiles').update({links}).eq('id',USER.id); PROF.links=links; renderLinks(); setText('ov-lcount',links.length); toast('Removed'); }
+function renderLinks(){ let el=document.getElementById('links-list'); let links=PROF.links||[]; el.innerHTML=links.length?links.map(l=>`<div class="lrow"><div class="linfo"><div class="ltitle">${x(l.title)}</div><div class="lurl" style="font-size:12px;color:var(--t3)">${x(l.url)}</div></div><div class="lbtns"><button class="btn btn-red btn-sm" onclick="delLink(${l.id})">✕</button></div></div>`).join(''):'<div class="empty" style="text-align:center;color:var(--t3);padding:20px">No links yet</div>'; }
+function buildThemeGrid(){ document.getElementById('tgrid').innerHTML=Object.entries(THEMES).map(([k,t])=>`<div class="ttile ${k===PICKED?'sel':''}" onclick="pickTheme('${k}',this)"><div class="tprev" style="background:${t.bg}"><div class="tc" style="background:${t.acc}"></div><div style="height:3px;width:60%;background:${t.lbg}"></div></div><span style="font-size:10px;text-transform:uppercase">${k}</span></div>`).join(''); }
+function buildBgOpts(){ document.getElementById('bgopt').innerHTML=BG_EFFECTS.map(b=>`<div class="bgo ${b.key===PICKED_EFF?'sel':''}" onclick="pickEff('${b.key}',this)"><div>${b.icon}</div>${b.label}</div>`).join(''); }
+function pickTheme(key,el){ PICKED=key; document.querySelectorAll('.ttile').forEach(t=>t.classList.remove('sel')); el.classList.add('sel'); let t=THEMES[key]; if(t){ document.getElementById('cc-bg').value=t.bg; document.getElementById('cc-txt').value=t.txt; document.getElementById('cc-acc').value=t.acc; document.getElementById('cc-lbg').value=t.lbg; } }
+function pickEff(key,el){ PICKED_EFF=key; document.querySelectorAll('.bgo').forEach(b=>b.classList.remove('sel')); el.classList.add('sel'); }
+function useCustom(){ PICKED='custom'; document.querySelectorAll('.ttile').forEach(t=>t.classList.remove('sel')); toast('Custom colors ready — save appearance'); }
+async function saveAppear(){ let custom_colors=null; if(PICKED==='custom') custom_colors={bg:document.getElementById('cc-bg').value,txt:document.getElementById('cc-txt').value,acc:document.getElementById('cc-acc').value,lbg:document.getElementById('cc-lbg').value}; await DB.from('profiles').update({theme:PICKED,bg_effect:PICKED_EFF,custom_colors}).eq('id',USER.id); PROF={...PROF,theme:PICKED,bg_effect:PICKED_EFF,custom_colors}; setText('ov-theme',PICKED); toast('Appearance saved'); }
+function openMyProfile(){ window.open('/'+PROF.username,'_blank'); }
+function copyUrl(){ navigator.clipboard.writeText(location.origin+'/'+PROF.username); toast('URL copied!'); }
+function claimIt(){ let val=document.getElementById('claim-in').value.trim(); document.getElementById('r-un').value=val; openAuth('reg'); }
 
-async function addLink(){
-  const title=v('lk-t'),url=v('lk-u');
-  const err=document.getElementById('lke');err.classList.remove('on');
-  if(!title){err.textContent='Title required';err.classList.add('on');return;}
-  if(!url){err.textContent='URL required';err.classList.add('on');return;}
-  const links=[...(PROF.links||[]),{title,url,id:Date.now()}];
-  const {error}=await DB.from('profiles').update({links}).eq('id',USER.id);
-  if(error){err.textContent=error.message;err.classList.add('on');return;}
-  PROF.links=links;closeLinkOv();renderLinks();
-  set('ov-lcount',links.length);toast('Link added!');
-}
+// PUBLIC PROFILE
+async function showPublicProfile(username){ let {data:prof}=await DB.from('profiles').select('*').eq('username',username).maybeSingle(); if(!prof){go('home');toast('Profile not found');return;} let colors; if(prof.theme==='custom'&&prof.custom_colors) colors=prof.custom_colors; else colors=THEMES[prof.theme]||THEMES.lime; let pg=document.getElementById('pg-profile'); pg.style.background=colors.bg; pg.style.color=colors.txt; let avWrap=document.getElementById('pf-av'); if(prof.avatar_url){ avWrap.innerHTML=`<img class="pav" src="${x(prof.avatar_url)}" onerror="this.parentNode.innerHTML='<div class=\'pavini\' style=\'background:linear-gradient(135deg,${colors.acc},${colors.bg});color:${colors.acc}\'>${(prof.display_name||prof.username)[0].toUpperCase()}</div>'">`; } else { avWrap.innerHTML=`<div class="pavini" style="background:linear-gradient(135deg,${colors.acc},${colors.bg});color:${colors.acc}">${(prof.display_name||prof.username)[0].toUpperCase()}</div>`; } document.getElementById('pf-name').textContent=prof.display_name||prof.username; document.getElementById('pf-handle').textContent='@'+prof.username; document.getElementById('pf-bio').textContent=prof.bio||''; let soc=prof.socials||{}; let socHtml=SOCIALS_DEF.filter(s=>soc[s.key]).map(s=>{ let href=soc[s.key]; if(!href.startsWith('http')&&!href.startsWith('mailto:')) href=s.base+soc[s.key]; return `<a class="psoc" href="${x(href)}" target="_blank" style="background:${colors.lbg};color:${colors.ltxt};border-color:${colors.acc}33">${s.icon}</a>`; }).join(''); document.getElementById('pf-socials').innerHTML=socHtml; let links=prof.links||[]; document.getElementById('pf-links').innerHTML=links.length?links.map(l=>`<a class="plink" href="${x(l.url)}" target="_blank" style="background:${colors.lbg};color:${colors.ltxt}">${x(l.title)}</a>`).join(''):'<div class="pnone" style="opacity:.4">no links yet</div>'; startProfileEffect(prof.bg_effect||'rain',colors); go('profile'); }
+function stopProfileEffects(){ if(rfxCleanup)rfxCleanup(); if(gradInterval)clearInterval(gradInterval); ['prf-rain','prf-stars','prf-lines'].forEach(id=>{let c=document.getElementById(id);if(c){c.style.display='none';let ctx=c.getContext('2d');if(ctx)ctx.clearRect(0,0,c.width,c.height);}}); document.getElementById('prf-gradient').style.display='none'; document.getElementById('prf-dots').style.display='none'; }
+function startProfileEffect(eff,colors){ stopProfileEffects(); if(eff==='rain'){ let c=document.getElementById('prf-rain');c.style.display='block';c.style.opacity='.06';let ctx=c.getContext('2d');let chars='アイウエオカキクケコ';let drops=[],cols=0;let run=true,raf;let resize=()=>{c.width=innerWidth;c.height=innerHeight;cols=Math.floor(c.width/28);drops=Array.from({length:cols},()=>Math.random()*-80);}; resize();window.addEventListener('resize',resize); (function draw(){if(!run)return;ctx.fillStyle='rgba(0,0,0,.05)';ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle=colors.acc;ctx.font='13px monospace';drops.forEach((y,i)=>{ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*28,y*18);if(y*18>c.height&&Math.random()>.97)drops[i]=0;drops[i]++;});raf=requestAnimationFrame(draw);})(); rfxCleanup=()=>{run=false;cancelAnimationFrame(raf);window.removeEventListener('resize',resize);}; } else if(eff==='gradient'){ let el=document.getElementById('prf-gradient');el.style.display='block';let deg=0;gradInterval=setInterval(()=>{deg=(deg+.3)%360;el.style.background=`linear-gradient(${deg}deg,${colors.bg},${colors.acc}22,${colors.lbg},${colors.bg})`;},40);rfxCleanup=()=>clearInterval(gradInterval); } else if(eff==='dots'){ let el=document.getElementById('prf-dots');el.style.display='block';el.style.backgroundImage=`radial-gradient(circle,${colors.acc} 1px,transparent 1px)`;el.style.backgroundSize='26px 26px';rfxCleanup=()=>{}; } else if(eff==='stars'){ let c=document.getElementById('prf-stars');c.style.display='block';c.style.opacity='.9';let ctx=c.getContext('2d');let stars=[],run=true,raf;let resize=()=>{c.width=innerWidth;c.height=innerHeight;stars=Array.from({length:120},()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.5+.3,o:Math.random(),s:Math.random()*.02+.005}));};resize();window.addEventListener('resize',resize);(function draw(){if(!run)return;ctx.clearRect(0,0,c.width,c.height);stars.forEach(s=>{s.o+=s.s;if(s.o>1||s.o<0)s.s*=-1;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=colors.acc;ctx.globalAlpha=s.o*.6;ctx.fill();});ctx.globalAlpha=1;raf=requestAnimationFrame(draw);})();rfxCleanup=()=>{run=false;cancelAnimationFrame(raf);window.removeEventListener('resize',resize);}; } else if(eff==='lines'){ let c=document.getElementById('prf-lines');c.style.display='block';c.style.opacity='.06';let ctx=c.getContext('2d');let run=true,raf,offset=0;let resize=()=>{c.width=innerWidth;c.height=innerHeight;};resize();window.addEventListener('resize',resize);(function draw(){if(!run)return;ctx.clearRect(0,0,c.width,c.height);ctx.strokeStyle=colors.acc;ctx.lineWidth=1;let spacing=4;for(let y=((offset%spacing)-spacing);y<c.height+spacing;y+=spacing){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(c.width,y);ctx.stroke();}offset+=.4;raf=requestAnimationFrame(draw);})();rfxCleanup=()=>{run=false;cancelAnimationFrame(raf);window.removeEventListener('resize',resize);}; } else { rfxCleanup=()=>{}; } }
 
-async function delLink(id){
-  const links=(PROF.links||[]).filter(l=>l.id!==id);
-  await DB.from('profiles').update({links}).eq('id',USER.id);
-  PROF.links=links;renderLinks();
-  set('ov-lcount',links.length);toast('Removed');
-}
+// RAIN BG FOR LANDING (static)
+(function(){let c=document.getElementById('bg-canvas');let ctx=c.getContext('2d');let chars='アイウエオカキクケコサシスセソ';let drops=[],cols;function resize(){c.width=innerWidth;c.height=innerHeight;cols=Math.floor(c.width/28);drops=Array.from({length:cols},()=>Math.random()*-80);}resize();addEventListener('resize',resize);c.style.opacity='.04';function draw(){ctx.fillStyle='rgba(0,0,0,.05)';ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle='#fff';ctx.font='13px monospace';drops.forEach((y,i)=>{ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*28,y*18);if(y*18>c.height&&Math.random()>.97)drops[i]=0;drops[i]++;});requestAnimationFrame(draw);}draw();})();
 
-function renderLinks(){
-  const el=document.getElementById('links-list');
-  const links=PROF.links||[];
-  el.innerHTML=links.length
-    ?links.map(l=>`<div class="lrow">
-        <div class="linfo">
-          <div class="ltitle">${x(l.title)}</div>
-          <div class="lurl">${x(l.url)}</div>
-        </div>
-        <div class="lbtns">
-          <a href="${x(l.url)}" target="_blank" class="btn btn-ghost btn-sm">↗</a>
-          <button class="btn btn-red btn-sm" onclick="delLink(${l.id})">✕</button>
-        </div>
-      </div>`).join('')
-    :'<div class="empty">No links yet — add your first one!</div>';
-}
-
-// ── Appearance ──
-function buildThemeGrid(){
-  document.getElementById('tgrid').innerHTML=Object.entries(THEMES).map(([k,t])=>`
-    <div class="ttile${k===PICKED?' sel':''}" onclick="pickTheme('${k}',this)">
-      <div class="tprev" style="background:${t.bg}">
-        <div class="tc" style="background:${t.acc}"></div>
-        <div class="tl" style="background:${t.lbg};border:1px solid ${t.acc}44"></div>
-        <div class="tl2" style="background:${t.lbg};border:1px solid ${t.acc}33"></div>
-      </div>
-      <span class="tn">${k}</span>
-    </div>`).join('');
-}
-
-function buildBgOpts(){
-  document.getElementById('bgopt').innerHTML=BG_EFFECTS.map(b=>`
-    <div class="bgo${b.key===PICKED_EFF?' sel':''}" onclick="pickEff('${b.key}',this)">
-      <div class="bei">${b.icon}</div>${b.label}
-    </div>`).join('');
-}
-
-function pickTheme(key,el){
-  PICKED=key;
-  document.querySelectorAll('.ttile').forEach(t=>t.classList.remove('sel'));
-  el.classList.add('sel');
-  const t=THEMES[key];
-  if(t){
-    document.getElementById('cc-bg').value=t.bg;
-    document.getElementById('cc-txt').value=t.txt;
-    document.getElementById('cc-acc').value=t.acc;
-    document.getElementById('cc-lbg').value=t.lbg;
-    document.getElementById('cc-ltxt').value=t.ltxt;
-  }
-}
-
-function pickEff(key,el){
-  PICKED_EFF=key;
-  document.querySelectorAll('.bgo').forEach(b=>b.classList.remove('sel'));
-  el.classList.add('sel');
-}
-
-function useCustom(){
-  PICKED='custom';
-  document.querySelectorAll('.ttile').forEach(t=>t.classList.remove('sel'));
-  toast('Custom colors applied — hit Save Appearance');
-}
-
-async function saveAppear(){
-  let custom_colors=null;
-  if(PICKED==='custom'){
-    custom_colors={
-      bg:document.getElementById('cc-bg').value,
-      txt:document.getElementById('cc-txt').value,
-      acc:document.getElementById('cc-acc').value,
-      lbg:document.getElementById('cc-lbg').value,
-      ltxt:document.getElementById('cc-ltxt').value,
-    };
-  }
-  const {error}=await DB.from('profiles').update({theme:PICKED,bg_effect:PICKED_EFF,custom_colors}).eq('id',USER.id);
-  if(error){toast('Error: '+error.message);return;}
-  PROF={...PROF,theme:PICKED,bg_effect:PICKED_EFF,custom_colors};
-  set('ov-theme',PICKED);
-  toast('Appearance saved ✦');
-}
-
-function openMyProfile(){window.open('/'+PROF.username,'_blank');}
-function copyUrl(){navigator.clipboard.writeText(location.origin+'/'+PROF.username).then(()=>toast('URL copied!'));}
-
-// ════════════════════════════════════
-//  PUBLIC PROFILE
-// ════════════════════════════════════
-async function showPublicProfile(username){
-  const {data:prof,error}=await DB.from('profiles').select('*').eq('username',username).maybeSingle();
-  if(error||!prof){go('home');toast('Profile not found');return;}
-
-  // resolve colors
-  let colors;
-  if(prof.theme==='custom'&&prof.custom_colors){
-    const c=prof.custom_colors;
-    colors={bg:c.bg||'#070707',txt:c.txt||'#f0f0f0',acc:c.acc||'#c8ff00',lbg:c.lbg||'#111',ltxt:c.ltxt||'#f0f0f0'};
-  } else {
-    colors={...( THEMES[prof.theme]||THEMES.lime)};
-  }
-  const eff=prof.bg_effect||'rain';
-
-  // apply page bg/color
-  const pg=document.getElementById('pg-profile');
-  pg.style.background=colors.bg;
-  pg.style.color=colors.txt;
-
-  // avatar
-  const avWrap=document.getElementById('pf-av');
-  if(prof.avatar_url){
-    avWrap.innerHTML=`<img class="pav" src="${x(prof.avatar_url)}" alt="" onerror="this.parentNode.innerHTML=initHtml('${x(prof.display_name||prof.username)}','${colors.acc}','${colors.bg}')">`;
-  } else {
-    avWrap.innerHTML=initHtml(prof.display_name||prof.username,colors.acc,colors.bg);
-  }
-
-  // name + handle + bio
-  document.getElementById('pf-name').textContent=prof.display_name||prof.username;
-  document.getElementById('pf-handle').textContent='@'+prof.username;
-  document.getElementById('pf-bio').textContent=prof.bio||'';
-
-  // socials
-  const socWrap=document.getElementById('pf-socials');
-  const soc=prof.socials||{};
-  const socHtml=SOCIALS_DEF.filter(s=>soc[s.key]).map(s=>{
-    let href=soc[s.key];
-    if(!href.startsWith('http')&&!href.startsWith('mailto:')){
-      href=s.base+soc[s.key];
-    }
-    return `<a class="psoc" href="${x(href)}" target="_blank" rel="noopener" title="${s.label}" style="background:${colors.lbg};color:${colors.ltxt};border-color:${colors.acc}22">${s.icon}</a>`;
-  }).join('');
-  socWrap.innerHTML=socHtml;
-
-  // link buttons
-  const linksWrap=document.getElementById('pf-links');
-  const links=prof.links||[];
-  linksWrap.innerHTML=links.length
-    ?links.map(l=>`<a class="plink" href="${x(l.url)}" target="_blank" rel="noopener" style="background:${colors.lbg};color:${colors.ltxt};border-color:${colors.acc}18">${x(l.title)}</a>`).join('')
-    :'<div class="pnone">no links yet</div>';
-
-  // start effect
-  startEffect(eff,colors);
-  go('profile');
-}
-
-function initHtml(name,acc,bg){
-  const letter=(name||'?')[0].toUpperCase();
-  return `<div class="pavini" style="background:linear-gradient(135deg,${acc},${bg});color:${acc}">${letter}</div>`;
-}
-
-// ─── Profile background effects ───
-function stopEffects(){
-  if(rfxHandle){rfxHandle();rfxHandle=null;}
-  if(gradTimer){clearInterval(gradTimer);gradTimer=null;}
-  // clear canvases
-  ['prf-rain','prf-stars','prf-lines'].forEach(id=>{
-    const c=document.getElementById(id);
-    if(c){const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);c.style.display='none';}
-  });
-  document.getElementById('prf-gradient').style.display='none';
-  document.getElementById('prf-dots').style.display='none';
-}
-
-function startEffect(eff,colors){
-  stopEffects();
-  if(eff==='rain') startProfileRain(colors);
-  else if(eff==='gradient') startProfileGradient(colors);
-  else if(eff==='dots') startDots(colors);
-  else if(eff==='stars') startStars(colors);
-  else if(eff==='lines') startLines(colors);
-}
-
-function startProfileRain(colors){
-  const c=document.getElementById('prf-rain');
-  c.style.display='block';c.style.opacity='.06';
-  const ctx=c.getContext('2d');
-  const CH='アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン゛゜ァィゥェォッャュョヴ';
-  let drops=[],cols=0,run=true,raf;
-  function resize(){c.width=innerWidth;c.height=innerHeight;cols=Math.floor(c.width/26);drops=Array.from({length:cols},()=>Math.random()*-60);}
-  resize();const ro=new ResizeObserver(resize);ro.observe(document.body);
-  ;(function draw(){
-    if(!run)return;
-    ctx.fillStyle='rgba(0,0,0,.05)';ctx.fillRect(0,0,c.width,c.height);
-    ctx.fillStyle=colors.acc;ctx.font='13px monospace';
-    drops.forEach((y,i)=>{
-      ctx.globalAlpha=.7;
-      ctx.fillText(CH[Math.floor(Math.random()*CH.length)],i*26,y*18);
-      if(y*18>c.height&&Math.random()>.975)drops[i]=0;drops[i]++;
-    });
-    ctx.globalAlpha=1;
-    raf=requestAnimationFrame(draw);
-  })();
-  rfxHandle=()=>{run=false;cancelAnimationFrame(raf);ro.disconnect();};
-}
-
-function startProfileGradient(colors){
-  const el=document.getElementById('prf-gradient');
-  el.style.display='block';
-  let deg=0;
-  function upd(){deg=(deg+.25)%360;el.style.background=`linear-gradient(${deg}deg,${colors.bg},${colors.acc}22,${colors.lbg},${colors.bg})`;}
-  upd();gradTimer=setInterval(upd,30);
-  rfxHandle=()=>{};
-}
-
-function startDots(colors){
-  const el=document.getElementById('prf-dots');
-  el.style.display='block';
-  el.style.backgroundImage=`radial-gradient(circle,${colors.acc} 1px,transparent 1px)`;
-  el.style.backgroundSize='28px 28px';
-  rfxHandle=()=>{};
-}
-
-function startStars(colors){
-  const c=document.getElementById('prf-stars');
-  c.style.display='block';c.style.opacity='.9';
-  const ctx=c.getContext('2d');
-  let run=true,raf,stars=[];
-  function resize(){
-    c.width=innerWidth;c.height=innerHeight;
-    stars=Array.from({length:140},()=>({
-      x:Math.random()*c.width,y:Math.random()*c.height,
-      r:Math.random()*1.5+.3,o:Math.random(),
-      s:Math.random()*.02+.005
-    }));
-  }
-  resize();const ro=new ResizeObserver(resize);ro.observe(document.body);
-  ;(function draw(){
-    if(!run)return;
-    ctx.clearRect(0,0,c.width,c.height);
-    stars.forEach(s=>{
-      s.o+=s.s;if(s.o>1||s.o<0)s.s*=-1;
-      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-      ctx.fillStyle=colors.acc;ctx.globalAlpha=s.o*.6;ctx.fill();
-    });
-    ctx.globalAlpha=1;
-    raf=requestAnimationFrame(draw);
-  })();
-  rfxHandle=()=>{run=false;cancelAnimationFrame(raf);ro.disconnect();};
-}
-
-function startLines(colors){
-  const c=document.getElementById('prf-lines');
-  c.style.display='block';c.style.opacity='.06';
-  const ctx=c.getContext('2d');
-  let run=true,raf,offset=0;
-  function resize(){c.width=innerWidth;c.height=innerHeight;}
-  resize();const ro=new ResizeObserver(resize);ro.observe(document.body);
-  ;(function draw(){
-    if(!run)return;
-    ctx.clearRect(0,0,c.width,c.height);
-    ctx.strokeStyle=colors.acc;ctx.lineWidth=1;
-    const spacing=4;
-    for(let y=((offset%spacing)-spacing);y<c.height+spacing;y+=spacing){
-      ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(c.width,y);ctx.stroke();
-    }
-    offset+=.4;
-    raf=requestAnimationFrame(draw);
-  })();
-  rfxHandle=()=>{run=false;cancelAnimationFrame(raf);ro.disconnect();};
-}
-
-// ════════════════════════════════════
-//  LANDING
-// ════════════════════════════════════
-function claimIt(){
-  const val=document.getElementById('claim-in').value.trim();
-  document.getElementById('r-un').value=val;
-  openAuth('reg');
-}
-
-// ════════════════════════════════════
-//  UTILS
-// ════════════════════════════════════
-function v(id){return document.getElementById(id).value.trim();}
-function set(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
-function x(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-let toastT;
-function toast(msg){
-  const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
-  clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3000);
-}
-
-// ════════════════════════════════════
-//  BOOT
-// ════════════════════════════════════
 boot();
 </script>
-
-<!--
-═══════════════════════════════════════════════════════
-  SUPABASE SQL — paste this into SQL Editor and run:
-═══════════════════════════════════════════════════════
-
--- Drop and recreate policies safely
-DROP POLICY IF EXISTS "public read"    ON public.profiles;
-DROP POLICY IF EXISTS "owner write"    ON public.profiles;
-DROP POLICY IF EXISTS "Public read"    ON public.profiles;
-DROP POLICY IF EXISTS "Own write"      ON public.profiles;
-DROP POLICY IF EXISTS "anyone can read profiles"    ON public.profiles;
-DROP POLICY IF EXISTS "owner can write own profile" ON public.profiles;
-
--- Create table
-CREATE TABLE IF NOT EXISTS public.profiles (
-  id            UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  username      TEXT UNIQUE NOT NULL,
-  display_name  TEXT,
-  bio           TEXT,
-  avatar_url    TEXT,
-  theme         TEXT DEFAULT 'lime',
-  custom_colors JSONB,
-  bg_effect     TEXT DEFAULT 'rain',
-  links         JSONB DEFAULT '[]'::jsonb,
-  socials       JSONB DEFAULT '{}'::jsonb,
-  created_at    TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Enable RLS
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-
--- Policies
-CREATE POLICY "public read"
-  ON public.profiles FOR SELECT USING (true);
-
-CREATE POLICY "owner write"
-  ON public.profiles FOR ALL
-  USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id);
-
--- If you already have the table but need to add socials column:
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS socials JSONB DEFAULT '{}'::jsonb;
-
-═══════════════════════════════════════════════════════
-  HOSTING — SPA routing needed:
-
-  Netlify: _redirects file →  /*  /index.html  200
-  Vercel: vercel.json →  {"rewrites":[{"source":"/(.*)","destination":"/index.html"}]}
-  Cloudflare Pages: same _redirects as Netlify
-═══════════════════════════════════════════════════════
--->
 </body>
 </html>
