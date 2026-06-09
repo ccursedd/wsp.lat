@@ -55,10 +55,6 @@ if not authorized then
 end
 
 print("loading compass.lol!")
-
--- =============================================
--- CLEANUP - DESTROY ALL EXISTING UI FIRST
--- =============================================
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -100,7 +96,6 @@ local function destroyAllCompassUIs()
     end
 end
 
--- Destroy everything before loading new UI
 destroyAllCompassUIs()
 
 -- Wait a moment to ensure cleanup is complete
