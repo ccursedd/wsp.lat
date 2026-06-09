@@ -1,810 +1,1470 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>LuaGuard | Enterprise Whitelisting Service</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VoidAuth — Lua Whitelist Service</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0a0a0f 0%, #0f0f1a 100%);
-            color: #eef2ff;
-            line-height: 1.5;
-            min-height: 100vh;
-        }
+  :root {
+    --bg:        #0a0a0f;
+    --surface:   #10101a;
+    --surface2:  #16162a;
+    --border:    #1e1e38;
+    --accent:    #6c63ff;
+    --accent2:   #a78bfa;
+    --green:     #22d3a0;
+    --red:       #ff4f6d;
+    --yellow:    #f59e0b;
+    --text:      #e8e8f0;
+    --muted:     #666688;
+    --font:      'Space Grotesk', sans-serif;
+    --mono:      'JetBrains Mono', monospace;
+  }
 
-        /* Modern glass morphism */
-        .glass {
-            background: rgba(20, 20, 35, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 1rem 2rem;
-        }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 
-        /* Navigation */
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            padding: 1rem 0;
-            margin-bottom: 2rem;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-        }
+  /* ── LANDING PAGE ── */
+  #landing {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
 
-        .logo {
-            font-size: 1.8rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #c084fc, #60a5fa);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
+  .land-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 48px;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
 
-        .logo i {
-            background: none;
-            color: #a78bfa;
-        }
+  .logo {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--accent2);
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--accent); }
 
-        .nav-tabs {
-            display: flex;
-            gap: 1rem;
-            background: rgba(15, 15, 25, 0.5);
-            padding: 0.5rem;
-            border-radius: 60px;
-        }
+  .land-nav-links { display: flex; gap: 12px; align-items: center; }
 
-        .tab-btn {
-            padding: 0.7rem 1.8rem;
-            border-radius: 40px;
-            background: transparent;
-            border: none;
-            color: #9ca3af;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-        }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 20px;
+    border-radius: 8px;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.18s;
+    text-decoration: none;
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-danger:hover { opacity: 0.85; }
+  .btn-success { background: var(--green); color: #0a0a0f; }
+  .btn-success:hover { opacity: 0.85; }
+  .btn-sm { padding: 6px 14px; font-size: 13px; }
 
-        .tab-btn.active {
-            background: linear-gradient(105deg, #7c3aed, #a855f7);
-            color: white;
-            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
-        }
+  .hero {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 80px 24px 60px;
+    position: relative;
+    overflow: hidden;
+  }
 
-        /* Cards */
-        .card {
-            background: rgba(15, 15, 25, 0.6);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
+  .hero-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(108,99,255,0.12) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -55%);
+    pointer-events: none;
+  }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(108,99,255,0.1);
+    border: 1px solid rgba(108,99,255,0.3);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--accent2);
+    margin-bottom: 28px;
+  }
+  .hero-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        .stat-card {
-            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(168, 85, 247, 0.05));
-            border: 1px solid rgba(168, 85, 247, 0.2);
-            border-radius: 1rem;
-            padding: 1.5rem;
-        }
+  .hero h1 {
+    font-size: clamp(40px, 6vw, 72px);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -2px;
+    margin-bottom: 20px;
+  }
+  .hero h1 .grad {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 60%, #c4b5fd 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
 
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #c084fc;
-        }
+  .hero p {
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 520px;
+    line-height: 1.65;
+    margin-bottom: 40px;
+  }
 
-        /* Tables */
-        .table-container {
-            overflow-x: auto;
-        }
+  .hero-buttons { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+  .stats-row {
+    display: flex;
+    gap: 48px;
+    margin-top: 72px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .stat-item { text-align: center; }
+  .stat-num {
+    font-size: 32px;
+    font-weight: 700;
+    font-family: var(--mono);
+    color: var(--accent2);
+  }
+  .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
 
-        th, td {
-            text-align: left;
-            padding: 1rem;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin-top: 80px;
+  }
+  .feature-card {
+    background: var(--surface);
+    padding: 36px 32px;
+    transition: background 0.2s;
+  }
+  .feature-card:hover { background: var(--surface2); }
+  .feat-icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    background: rgba(108,99,255,0.12);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(108,99,255,0.2);
+  }
+  .feature-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .feature-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
 
-        th {
-            color: #c084fc;
-            font-weight: 600;
-        }
+  .lua-snippet {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin: 80px auto;
+    max-width: 680px;
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .lua-snippet .comment { color: #4a4a7a; }
+  .lua-snippet .keyword { color: var(--accent2); }
+  .lua-snippet .string { color: var(--green); }
+  .lua-snippet .func { color: #60a5fa; }
+  .lua-snippet .snip-header {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
 
-        /* Forms */
-        input, select, textarea {
-            background: #111118;
-            border: 1px solid #2d2d3a;
-            padding: 0.75rem 1rem;
-            border-radius: 0.75rem;
-            color: white;
-            font-size: 0.9rem;
-            width: 100%;
-            transition: 0.2s;
-        }
+  /* ── AUTH MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999;
+    backdrop-filter: blur(4px);
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .modal-overlay.show { opacity: 1; pointer-events: all; }
 
-        input:focus, select:focus {
-            outline: none;
-            border-color: #a855f7;
-        }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px;
+    width: 420px;
+    max-width: 95vw;
+    transform: translateY(12px); transition: transform 0.2s;
+  }
+  .modal-overlay.show .modal { transform: translateY(0); }
+  .modal h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .modal p.sub { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
 
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.75rem;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: 0.2s;
-        }
+  .tabs { display: flex; gap: 0; margin-bottom: 28px; border-bottom: 1px solid var(--border); }
+  .tab-btn {
+    background: none; border: none; cursor: pointer;
+    font-family: var(--font); font-size: 14px; font-weight: 500;
+    color: var(--muted); padding: 10px 20px;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: all 0.15s;
+  }
+  .tab-btn.active { color: var(--accent2); border-bottom-color: var(--accent); }
 
-        .btn-primary {
-            background: linear-gradient(105deg, #7c3aed, #a855f7);
-            color: white;
-        }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--accent);
+  }
+  .form-group textarea { resize: vertical; min-height: 80px; }
 
-        .btn-danger {
-            background: linear-gradient(105deg, #dc2626, #ef4444);
-            color: white;
-        }
+  .error-msg {
+    background: rgba(255,79,109,0.1);
+    border: 1px solid rgba(255,79,109,0.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--red);
+    margin-bottom: 16px;
+    display: none;
+  }
+  .error-msg.show { display: block; }
+  .success-msg {
+    background: rgba(34,211,160,0.1);
+    border: 1px solid rgba(34,211,160,0.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--green);
+    margin-bottom: 16px;
+    display: none;
+  }
+  .success-msg.show { display: block; }
 
-        .btn-success {
-            background: linear-gradient(105deg, #059669, #10b981);
-            color: white;
-        }
+  /* ── DASHBOARD ── */
+  #dashboard { display: none; min-height: 100vh; }
 
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(8px);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
+  .dash-layout { display: flex; min-height: 100vh; }
 
-        .modal-content {
-            max-width: 500px;
-            width: 90%;
-            background: #1a1a2e;
-            border-radius: 1.5rem;
-            padding: 2rem;
-        }
+  .sidebar {
+    width: 240px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 50;
+  }
 
-        .alert {
-            padding: 1rem;
-            border-radius: 0.75rem;
-            margin-bottom: 1rem;
-        }
+  .sidebar-logo {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo .logo { font-size: 18px; }
 
-        .alert-success {
-            background: rgba(16, 185, 129, 0.2);
-            border: 1px solid #10b981;
-            color: #6ee7b7;
-        }
+  .sidebar-user {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .user-avatar {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+  }
+  .user-info { overflow: hidden; }
+  .user-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role {
+    font-size: 11px; color: var(--muted);
+    font-family: var(--mono);
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .user-role.admin { color: var(--accent2); }
 
-        .alert-error {
-            background: rgba(239, 68, 68, 0.2);
-            border: 1px solid #ef4444;
-            color: #fca5a5;
-        }
+  .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+  .nav-section-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted);
+    padding: 0 8px; margin: 12px 0 6px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    font-size: 14px; font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    border: none; background: none; width: 100%; text-align: left;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(108,99,255,0.12); color: var(--accent2); }
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
 
-        /* Lua Code Display */
-        .lua-code {
-            background: #0d0d17;
-            border-radius: 1rem;
-            padding: 1rem;
-            font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
-            overflow-x: auto;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
+  .sidebar-footer { padding: 16px 12px; border-top: 1px solid var(--border); }
 
-        @media (max-width: 768px) {
-            .container { padding: 1rem; }
-            .nav-tabs { width: 100%; justify-content: center; }
-        }
-    </style>
+  .main-content {
+    flex: 1;
+    margin-left: 240px;
+    padding: 32px 36px;
+    min-height: 100vh;
+  }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .page-header { margin-bottom: 28px; }
+  .page-header h1 { font-size: 24px; font-weight: 700; }
+  .page-header p { font-size: 14px; color: var(--muted); margin-top: 4px; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .card-title {
+    font-size: 14px; font-weight: 600;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 12px;
+  }
+
+  .stat-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; }
+  .stat-card-val { font-size: 30px; font-weight: 700; font-family: var(--mono); }
+  .stat-card-val.green { color: var(--green); }
+  .stat-card-val.red { color: var(--red); }
+  .stat-card-val.accent { color: var(--accent2); }
+  .stat-card-val.yellow { color: var(--yellow); }
+  .stat-card-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th {
+    text-align: left; padding: 10px 14px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 12px 14px; border-bottom: 1px solid rgba(30,30,56,0.5); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 100px;
+    font-size: 11px; font-weight: 600; font-family: var(--mono);
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
+  .badge-active { background: rgba(34,211,160,0.1); color: var(--green); }
+  .badge-active::before { background: var(--green); }
+  .badge-inactive { background: rgba(102,102,136,0.12); color: var(--muted); }
+  .badge-inactive::before { background: var(--muted); }
+  .badge-banned { background: rgba(255,79,109,0.1); color: var(--red); }
+  .badge-banned::before { background: var(--red); }
+  .badge-admin { background: rgba(167,139,250,0.12); color: var(--accent2); }
+  .badge-user { background: rgba(108,99,255,0.08); color: #8080cc; }
+
+  .key-display {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--bg);
+    padding: 4px 8px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    user-select: all;
+  }
+
+  /* Top bar inside dash */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar h2 { font-size: 22px; font-weight: 700; }
+
+  /* Search + filter row */
+  .filter-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .filter-row input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 14px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    outline: none;
+    flex: 1; min-width: 200px;
+    transition: border-color 0.15s;
+  }
+  .filter-row input:focus { border-color: var(--accent); }
+  .filter-row select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 14px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  /* Lua loader code display */
+  .code-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.65;
+    position: relative;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .copy-btn {
+    position: absolute; top: 12px; right: 12px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px 12px;
+    font-size: 12px; color: var(--muted); cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .empty-state {
+    text-align: center; padding: 48px 24px; color: var(--muted);
+  }
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  .loading { text-align: center; padding: 32px; color: var(--muted); font-size: 14px; }
+
+  /* Toast */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-size: 14px;
+    z-index: 9999;
+    transform: translateY(20px); opacity: 0;
+    transition: all 0.25s;
+    max-width: 320px;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.success { border-color: var(--green); color: var(--green); }
+  #toast.error { border-color: var(--red); color: var(--red); }
+
+  /* ── SETUP PAGE ── */
+  .setup-card {
+    max-width: 620px; margin: 0 auto;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 40px;
+  }
+  .setup-step { margin-bottom: 28px; }
+  .setup-step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.3);
+    font-size: 13px; font-weight: 700; color: var(--accent2);
+    margin-bottom: 10px;
+    font-family: var(--mono);
+  }
+  .setup-step h3 { font-size: 15px; margin-bottom: 6px; }
+  .setup-step p { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+
+  /* Separator */
+  .sep { height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* Responsive sidebar */
+  @media (max-width: 768px) {
+    .sidebar { width: 200px; }
+    .main-content { margin-left: 200px; padding: 20px; }
+  }
+  @media (max-width: 600px) {
+    .land-nav { padding: 16px 20px; }
+    .sidebar { transform: translateX(-100%); transition: transform 0.25s; }
+    .sidebar.open { transform: translateX(0); }
+    .main-content { margin-left: 0; }
+  }
+</style>
 </head>
 <body>
-<div class="container">
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="logo"><i class="fas fa-shield-haltered"></i> LuaGuard</div>
-        <div class="nav-tabs">
-            <button class="tab-btn active" onclick="switchTab('dashboard')"><i class="fas fa-chart-line"></i> Dashboard</button>
-            <button class="tab-btn" onclick="switchTab('whitelist')"><i class="fas fa-list"></i> Whitelist</button>
-            <button class="tab-btn" onclick="switchTab('users')"><i class="fas fa-users"></i> Users</button>
-            <button class="tab-btn" onclick="switchTab('lua-generator')"><i class="fas fa-code"></i> Lua Scripts</button>
-        </div>
-    </nav>
 
-    <!-- Dashboard Tab -->
-    <div id="dashboard-tab" class="tab-content">
-        <div class="stats-grid">
-            <div class="stat-card">
-                <i class="fas fa-key" style="font-size: 2rem; color: #a78bfa;"></i>
-                <div class="stat-value" id="totalLicenses">0</div>
-                <div>Total Licenses</div>
-            </div>
-            <div class="stat-card">
-                <i class="fas fa-check-circle" style="font-size: 2rem; color: #10b981;"></i>
-                <div class="stat-value" id="activeLicenses">0</div>
-                <div>Active Licenses</div>
-            </div>
-            <div class="stat-card">
-                <i class="fas fa-users" style="font-size: 2rem; color: #60a5fa;"></i>
-                <div class="stat-value" id="totalUsers">0</div>
-                <div>Total Users</div>
-            </div>
-            <div class="stat-card">
-                <i class="fas fa-chart-line" style="font-size: 2rem; color: #f59e0b;"></i>
-                <div class="stat-value" id="verificationCount">0</div>
-                <div>Verifications Today</div>
-            </div>
-        </div>
-        
-        <div class="card">
-            <h3><i class="fas fa-chart-pie"></i> License Usage Analytics</h3>
-            <canvas id="usageChart" style="max-height: 400px; margin-top: 1rem;"></canvas>
-        </div>
-
-        <div class="card">
-            <h3><i class="fas fa-clock"></i> Recent Verifications</h3>
-            <div class="table-container">
-                <table id="recentLogsTable">
-                    <thead>
-                        <tr><th>License Key</th><th>HWID</th><th>Status</th><th>Time</th></tr>
-                    </thead>
-                    <tbody id="recentLogsBody">
-                        <tr><td colspan="4" style="text-align: center;">Loading...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+<!-- ══════════════════════════════ LANDING ══════════════════════════════ -->
+<div id="landing">
+  <nav class="land-nav">
+    <div class="logo"><span>Void</span>Auth</div>
+    <div class="land-nav-links">
+      <button class="btn btn-ghost" onclick="openAuth('login')">Sign in</button>
+      <button class="btn btn-primary" onclick="openAuth('register')">Get started</button>
     </div>
+  </nav>
 
-    <!-- Whitelist Management Tab -->
-    <div id="whitelist-tab" class="tab-content" style="display: none;">
-        <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h3><i class="fas fa-plus-circle"></i> Create New License</h3>
-                <button class="btn btn-primary" onclick="openCreateLicenseModal()"><i class="fas fa-plus"></i> Add License</button>
-            </div>
-            
-            <div class="table-container">
-                <table id="licensesTable">
-                    <thead>
-                        <tr><th>License Key</th><th>HWID (Bound)</th><th>Expires</th><th>Status</th><th>Created</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody id="licensesBody">
-                        <tr><td colspan="6" style="text-align: center;">Loading licenses...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  <section class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-badge">Lua Script Protection System</div>
+    <h1>Whitelist &amp; protect<br>your <span class="grad">Lua scripts</span></h1>
+    <p>License keys, HWID locking, real-time validation, and a full admin dashboard — built for script developers who take security seriously.</p>
+    <div class="hero-buttons">
+      <button class="btn btn-primary" onclick="openAuth('register')" style="padding:12px 28px;font-size:15px;">Create free account</button>
+      <button class="btn btn-ghost" onclick="openAuth('login')" style="padding:12px 28px;font-size:15px;">Sign in</button>
     </div>
+    <div class="stats-row">
+      <div class="stat-item"><div class="stat-num" id="stat-licenses">—</div><div class="stat-label">Active licenses</div></div>
+      <div class="stat-item"><div class="stat-num" id="stat-scripts">—</div><div class="stat-label">Protected scripts</div></div>
+      <div class="stat-item"><div class="stat-num" id="stat-checks">—</div><div class="stat-label">Auth checks today</div></div>
+    </div>
+  </section>
 
-    <!-- Users Tab -->
-    <div id="users-tab" class="tab-content" style="display: none;">
-        <div class="card">
-            <h3><i class="fas fa-user-plus"></i> Registered Users & HWIDs</h3>
-            <div class="table-container">
-                <table id="usersTable">
-                    <thead>
-                        <tr><th>HWID</th><th>License Key</th><th>First Seen</th><th>Last Verification</th><th>Verifications</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody id="usersBody">
-                        <tr><td colspan="6" style="text-align: center;">Loading users...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  <div class="features">
+    <div class="feature-card">
+      <div class="feat-icon">🔑</div>
+      <h3>License Key System</h3>
+      <p>Generate unique license keys, set expiry dates, and assign them to specific users and scripts instantly.</p>
     </div>
+    <div class="feature-card">
+      <div class="feat-icon">🖥️</div>
+      <h3>HWID Locking</h3>
+      <p>Bind licenses to hardware IDs on first execution. Prevent sharing with automatic HWID verification on every run.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon">⚡</div>
+      <h3>Real-time Validation</h3>
+      <p>A simple Lua <code>require</code> call checks the key against our API in milliseconds — no delays, no complex setup.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon">📊</div>
+      <h3>Admin Dashboard</h3>
+      <p>Full visibility over every license, user, and auth log. Ban, revoke, or reset HWIDs with one click.</p>
+    </div>
+  </div>
 
-    <!-- Lua Script Generator Tab -->
-    <div id="lua-generator-tab" class="tab-content" style="display: none;">
-        <div class="card">
-            <h3><i class="fas fa-code"></i> Generate Protected Lua Script</h3>
-            <p>Select a license key to generate a whitelist-protected Lua script</p>
-            <select id="scriptLicenseSelect" style="margin: 1rem 0;">
-                <option value="">Select license key...</option>
-            </select>
-            <button class="btn btn-primary" onclick="generateLuaScript()"><i class="fas fa-download"></i> Generate Lua Script</button>
-            <div id="generatedScript" style="margin-top: 1.5rem; display: none;">
-                <h4>Your Protected Lua Script:</h4>
-                <div class="lua-code" id="luaScriptContent"></div>
-                <button class="btn btn-success" style="margin-top: 1rem;" onclick="copyLuaScript()"><i class="fas fa-copy"></i> Copy Script</button>
-            </div>
-        </div>
-    </div>
+  <div class="lua-snippet" style="position:relative;">
+    <div class="snip-header">📄 Loader snippet — paste at the top of your script</div>
+    <span class="comment">-- VoidAuth Lua Loader</span>
+<span class="keyword">local</span> key = <span class="string">"VOID-XXXX-XXXX-XXXX"</span>   <span class="comment">-- user's license key</span>
+<span class="keyword">local</span> hwid = <span class="func">getHWID</span>()               <span class="comment">-- your hwid function</span>
+
+<span class="keyword">local</span> ok, err = <span class="func">VoidAuth.check</span>(key, hwid)
+<span class="keyword">if not</span> ok <span class="keyword">then</span>
+  <span class="func">error</span>(<span class="string">"Auth failed: "</span> .. (err <span class="keyword">or</span> <span class="string">"unknown"</span>))
+<span class="keyword">end</span>
+
+<span class="comment">-- ✅ Authenticated — your script runs below</span>
+    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+  </div>
 </div>
 
-<!-- Create License Modal -->
-<div id="licenseModal" class="modal">
-    <div class="modal-content">
-        <h3><i class="fas fa-key"></i> Create New License</h3>
-        <input type="text" id="newLicenseKey" placeholder="License Key (leave empty for auto-generate)" style="margin: 1rem 0;">
-        <input type="text" id="newHwid" placeholder="HWID to bind (optional)">
-        <input type="datetime-local" id="newExpiry" placeholder="Expiration Date">
-        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-            <button class="btn btn-primary" onclick="createLicense()">Create</button>
-            <button class="btn" onclick="closeModal()">Cancel</button>
-        </div>
+<!-- ══════════════════════════════ AUTH MODAL ══════════════════════════════ -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal">
+    <h2>Welcome to VoidAuth</h2>
+    <p class="sub">Sign in or create an account to access your dashboard.</p>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('login')">Sign in</button>
+      <button class="tab-btn" onclick="switchTab('register')">Create account</button>
     </div>
+    <div id="authError" class="error-msg"></div>
+    <div id="authSuccess" class="success-msg"></div>
+
+    <!-- Login form -->
+    <div id="loginForm">
+      <div class="form-group">
+        <label>Email address</label>
+        <input type="email" id="loginEmail" placeholder="you@example.com" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="••••••••" />
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;" onclick="doLogin()">Sign in</button>
+    </div>
+
+    <!-- Register form -->
+    <div id="registerForm" style="display:none;">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="regUsername" placeholder="cooldev" />
+      </div>
+      <div class="form-group">
+        <label>Email address</label>
+        <input type="email" id="regEmail" placeholder="you@example.com" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="regPass" placeholder="Min. 6 characters" />
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;" onclick="doRegister()">Create account</button>
+    </div>
+
+    <button class="btn btn-ghost btn-sm" style="margin-top:14px;" onclick="closeAuth()">Cancel</button>
+  </div>
 </div>
+
+<!-- ══════════════════════════════ DASHBOARD ══════════════════════════════ -->
+<div id="dashboard">
+  <div class="dash-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo"><div class="logo"><span>Void</span>Auth</div></div>
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar">?</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarName">Loading…</div>
+          <div class="user-role" id="sidebarRole">user</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Overview</div>
+        <button class="nav-item active" onclick="showPage('overview')" data-page="overview">
+          <span class="nav-icon">📊</span> Dashboard
+        </button>
+
+        <div class="nav-section-label">Manage</div>
+        <button class="nav-item" onclick="showPage('licenses')" data-page="licenses">
+          <span class="nav-icon">🔑</span> Licenses
+        </button>
+        <button class="nav-item" onclick="showPage('scripts')" data-page="scripts">
+          <span class="nav-icon">📜</span> Scripts
+        </button>
+        <button class="nav-item" onclick="showPage('users')" data-page="users" id="navUsers" style="display:none;">
+          <span class="nav-icon">👥</span> Users
+        </button>
+
+        <div class="nav-section-label">Tools</div>
+        <button class="nav-item" onclick="showPage('loader')" data-page="loader">
+          <span class="nav-icon">⚙️</span> Loader Code
+        </button>
+        <button class="nav-item" onclick="showPage('logs')" data-page="logs" id="navLogs" style="display:none;">
+          <span class="nav-icon">📋</span> Auth Logs
+        </button>
+        <button class="nav-item" onclick="showPage('mykey')" data-page="mykey">
+          <span class="nav-icon">🪪</span> My License
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="nav-item" onclick="doLogout()">
+          <span class="nav-icon">🚪</span> Sign out
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+
+      <!-- ── OVERVIEW ── -->
+      <div class="page active" id="page-overview">
+        <div class="page-header">
+          <h1>Dashboard</h1>
+          <p>Welcome back, <span id="welcomeName">—</span></p>
+        </div>
+        <div class="stat-cards" id="overviewStats">
+          <div class="stat-card"><div class="stat-card-val accent" id="ov-total">—</div><div class="stat-card-label">Total Licenses</div></div>
+          <div class="stat-card"><div class="stat-card-val green" id="ov-active">—</div><div class="stat-card-label">Active</div></div>
+          <div class="stat-card"><div class="stat-card-val red" id="ov-banned">—</div><div class="stat-card-label">Banned</div></div>
+          <div class="stat-card"><div class="stat-card-val yellow" id="ov-scripts">—</div><div class="stat-card-label">Scripts</div></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">Recent Licenses</div>
+            <div id="recentLicenses" class="loading">Loading…</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Recent Auth Logs</div>
+            <div id="recentLogs" class="loading">Loading…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── LICENSES ── -->
+      <div class="page" id="page-licenses">
+        <div class="topbar">
+          <h2>🔑 Licenses</h2>
+          <button class="btn btn-primary btn-sm" onclick="openNewLicenseModal()">+ New license</button>
+        </div>
+        <div class="filter-row">
+          <input type="text" id="licenseSearch" placeholder="Search key or username…" oninput="filterLicenses()" />
+          <select id="licenseStatusFilter" onchange="filterLicenses()">
+            <option value="">All statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="banned">Banned</option>
+          </select>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Key</th><th>User</th><th>Script</th><th>Status</th><th>HWID</th><th>Expires</th><th>Actions</th></tr></thead>
+              <tbody id="licensesBody"><tr><td colspan="7" class="loading">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SCRIPTS ── -->
+      <div class="page" id="page-scripts">
+        <div class="topbar">
+          <h2>📜 Scripts</h2>
+          <button class="btn btn-primary btn-sm" onclick="openNewScriptModal()">+ New script</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>Description</th><th>Licenses</th><th>Created</th><th>Actions</th></tr></thead>
+              <tbody id="scriptsBody"><tr><td colspan="5" class="loading">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── USERS (admin only) ── -->
+      <div class="page" id="page-users">
+        <div class="topbar"><h2>👥 Users</h2></div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Username</th><th>Email</th><th>Role</th><th>Licenses</th><th>Joined</th><th>Actions</th></tr></thead>
+              <tbody id="usersBody"><tr><td colspan="6" class="loading">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── LOADER CODE ── -->
+      <div class="page" id="page-loader">
+        <div class="page-header">
+          <h1>⚙️ Loader Code</h1>
+          <p>Copy this into the top of your Lua script to enable whitelist checking.</p>
+        </div>
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-title">How it works</div>
+          <p style="font-size:14px;color:var(--muted);line-height:1.7;">The loader sends the user's license key + HWID to our validation endpoint. On first run, the HWID is bound to the key. Every subsequent run verifies the same HWID. If the key is banned, expired, or used from a different machine — execution stops.</p>
+        </div>
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-title">Full Loader (HTTP-capable executors)</div>
+          <div class="code-box" id="loaderCode"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Validation API endpoint</div>
+          <div class="code-box" id="apiEndpoint">GET /api/check?key=VOID-XXXX&amp;hwid=YOUR_HWID</div>
+        </div>
+      </div>
+
+      <!-- ── AUTH LOGS (admin only) ── -->
+      <div class="page" id="page-logs">
+        <div class="topbar"><h2>📋 Auth Logs</h2></div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Time</th><th>Key</th><th>HWID</th><th>Result</th><th>Reason</th></tr></thead>
+              <tbody id="logsBody"><tr><td colspan="5" class="loading">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── MY LICENSE ── -->
+      <div class="page" id="page-mykey">
+        <div class="page-header">
+          <h1>🪪 My License</h1>
+          <p>Your personal license key and status.</p>
+        </div>
+        <div class="card" id="myLicenseCard">
+          <div class="loading">Loading…</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ── GENERIC MODAL ── -->
+<div class="modal-overlay" id="genericModal">
+  <div class="modal">
+    <h2 id="gModalTitle">Title</h2>
+    <p class="sub" id="gModalSub"></p>
+    <div id="gModalError" class="error-msg"></div>
+    <div id="gModalBody"></div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn btn-primary" style="flex:1;justify-content:center;" id="gModalOk" onclick="gModalSubmit()">Confirm</button>
+      <button class="btn btn-ghost" onclick="closeGenericModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
 
 <script>
-    // Supabase Configuration - REPLACE WITH YOUR ACTUAL CREDENTIALS
-    const SUPABASE_URL = 'https://tqninassljbrerabkcyd.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_pXlWJepgj8moF0WN9ZSllA_yR8Ukwtb';
-    
-    let supabase;
-    let usageChart = null;
+// ══════════════════════════════════════════════════════════
+//  SUPABASE INIT
+// ══════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://tqninassljbrerabkcyd.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_pXlWJepgj8moF0WN9ZSllA_yR8Ukwtb';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Initialize Supabase
-    async function initSupabase() {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
-        // Create tables if they don't exist (you need to run this SQL manually in Supabase SQL editor)
-        await setupDatabase();
-        loadDashboard();
-        loadLicenses();
-        loadUsers();
-        loadRecentLogs();
-    }
+let currentUser = null;
+let currentProfile = null;
+let allLicenses = [];
+let gModalCallback = null;
 
-    // SQL setup (run this once in Supabase SQL editor)
-    async function setupDatabase() {
-        const sql = `
-        -- Licenses table
-        CREATE TABLE IF NOT EXISTS licenses (
-            id SERIAL PRIMARY KEY,
-            license_key TEXT UNIQUE NOT NULL,
-            bound_hwid TEXT,
-            expires_at TIMESTAMPTZ,
-            is_active BOOLEAN DEFAULT true,
-            created_at TIMESTAMPTZ DEFAULT NOW()
-        );
-        
-        -- Verification logs table
-        CREATE TABLE IF NOT EXISTS verification_logs (
-            id SERIAL PRIMARY KEY,
-            license_key TEXT NOT NULL,
-            hwid TEXT NOT NULL,
-            success BOOLEAN DEFAULT false,
-            verified_at TIMESTAMPTZ DEFAULT NOW()
-        );
-        
-        -- Users/HWID tracking
-        CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            hwid TEXT UNIQUE NOT NULL,
-            license_key TEXT,
-            first_seen TIMESTAMPTZ DEFAULT NOW(),
-            last_verified TIMESTAMPTZ,
-            verification_count INT DEFAULT 0
-        );
-        
-        -- Insert demo licenses
-        INSERT INTO licenses (license_key, bound_hwid, expires_at, is_active) VALUES 
-            ('LUA-DEMO-2025', 'HWID-6620F9A1', NOW() + INTERVAL '90 days', true),
-            ('LUA-PRO-99X', NULL, NOW() + INTERVAL '365 days', true),
-            ('SYS-7G92K', 'HWID-ABC123', NOW() + INTERVAL '30 days', true)
-        ON CONFLICT (license_key) DO NOTHING;
-        
-        -- Enable RLS
-        ALTER TABLE licenses ENABLE ROW LEVEL SECURITY;
-        ALTER TABLE verification_logs ENABLE ROW LEVEL SECURITY;
-        ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-        
-        -- Create policies for public access (for demo)
-        CREATE POLICY "Public read access" ON licenses FOR SELECT USING (true);
-        CREATE POLICY "Public insert access" ON verification_logs FOR INSERT WITH CHECK (true);
-        CREATE POLICY "Public read access logs" ON verification_logs FOR SELECT USING (true);
-        CREATE POLICY "Public access users" ON users FOR ALL USING (true);
-        `;
-        
-        // Note: You need to run this SQL manually in Supabase SQL editor
-        console.log('Database setup SQL ready - please run in Supabase SQL editor');
-    }
+// ══════════════════════════════════════════════════════════
+//  INIT + SESSION
+// ══════════════════════════════════════════════════════════
+async function init() {
+  await loadPublicStats();
 
-    // Dashboard Functions
-    async function loadDashboard() {
-        try {
-            // Get total licenses
-            const { data: licenses } = await supabase.from('licenses').select('*');
-            document.getElementById('totalLicenses').textContent = licenses?.length || 0;
-            document.getElementById('activeLicenses').textContent = licenses?.filter(l => l.is_active).length || 0;
-            
-            // Get total users
-            const { data: users } = await supabase.from('users').select('*');
-            document.getElementById('totalUsers').textContent = users?.length || 0;
-            
-            // Get today's verifications
-            const today = new Date().toISOString().split('T')[0];
-            const { data: logs } = await supabase
-                .from('verification_logs')
-                .select('*')
-                .gte('verified_at', today);
-            document.getElementById('verificationCount').textContent = logs?.length || 0;
-            
-            // Create chart
-            const last7Days = Array.from({length: 7}, (_, i) => {
-                const d = new Date();
-                d.setDate(d.getDate() - i);
-                return d.toISOString().split('T')[0];
-            }).reverse();
-            
-            const counts = await Promise.all(last7Days.map(async date => {
-                const { count } = await supabase
-                    .from('verification_logs')
-                    .select('*', { count: 'exact', head: true })
-                    .gte('verified_at', date)
-                    .lt('verified_at', date + 'T23:59:59');
-                return count || 0;
-            }));
-            
-            if (usageChart) usageChart.destroy();
-            const ctx = document.getElementById('usageChart').getContext('2d');
-            usageChart = new Chart(ctx, {
-                type: 'line',
-                data: { labels: last7Days, datasets: [{ label: 'Verifications', data: counts, borderColor: '#a855f7', backgroundColor: 'rgba(168, 85, 247, 0.1)' }] }
-            });
-        } catch (error) {
-            console.error('Error loading dashboard:', error);
-        }
-    }
-    
-    async function loadRecentLogs() {
-        const { data } = await supabase
-            .from('verification_logs')
-            .select('*')
-            .order('verified_at', { ascending: false })
-            .limit(10);
-        
-        const tbody = document.getElementById('recentLogsBody');
-        if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4">No verifications yet</td></tr>';
-            return;
-        }
-        
-        tbody.innerHTML = data.map(log => `
-            <tr>
-                <td>${log.license_key}</td>
-                <td><code>${log.hwid}</code></td>
-                <td style="color: ${log.success ? '#10b981' : '#ef4444'}">${log.success ? '✅ Success' : '❌ Failed'}</td>
-                <td>${new Date(log.verified_at).toLocaleString()}</td>
-            </tr>
-        `).join('');
-    }
-    
-    // Whitelist Management
-    async function loadLicenses() {
-        const { data } = await supabase.from('licenses').select('*').order('created_at', { ascending: false });
-        const tbody = document.getElementById('licensesBody');
-        
-        if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6">No licenses found</td></tr>';
-            return;
-        }
-        
-        tbody.innerHTML = data.map(license => `
-            <tr>
-                <td><strong>${license.license_key}</strong></td>
-                <td><code>${license.bound_hwid || 'Any HWID'}</code></td>
-                <td>${license.expires_at ? new Date(license.expires_at).toLocaleDateString() : 'Never'}</td>
-                <td style="color: ${license.is_active ? '#10b981' : '#ef4444'}">${license.is_active ? 'Active' : 'Inactive'}</td>
-                <td>${new Date(license.created_at).toLocaleDateString()}</td>
-                <td>
-                    <button class="btn btn-danger" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;" onclick="toggleLicenseStatus('${license.license_key}', ${!license.is_active})">
-                        ${license.is_active ? 'Deactivate' : 'Activate'}
-                    </button>
-                    <button class="btn" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;" onclick="deleteLicense('${license.license_key}')">
-                        Delete
-                    </button>
-                </td>
-            </tr>
-        `).join('');
-        
-        // Update script generator dropdown
-        const select = document.getElementById('scriptLicenseSelect');
-        select.innerHTML = '<option value="">Select license key...</option>' + 
-            data.filter(l => l.is_active).map(l => `<option value="${l.license_key}">${l.license_key}</option>`).join('');
-    }
-    
-    async function createLicense() {
-        let licenseKey = document.getElementById('newLicenseKey').value;
-        if (!licenseKey) {
-            licenseKey = 'LUA-' + Math.random().toString(36).substring(2, 10).toUpperCase();
-        }
-        
-        const boundHwid = document.getElementById('newHwid').value || null;
-        const expiryDate = document.getElementById('newExpiry').value;
-        
-        const { error } = await supabase.from('licenses').insert({
-            license_key: licenseKey,
-            bound_hwid: boundHwid,
-            expires_at: expiryDate || null,
-            is_active: true
-        });
-        
-        if (error) {
-            alert('Error creating license: ' + error.message);
-        } else {
-            alert('License created successfully! Key: ' + licenseKey);
-            closeModal();
-            loadLicenses();
-            loadDashboard();
-        }
-    }
-    
-    async function toggleLicenseStatus(licenseKey, activate) {
-        const { error } = await supabase
-            .from('licenses')
-            .update({ is_active: activate })
-            .eq('license_key', licenseKey);
-        
-        if (error) alert('Error: ' + error.message);
-        else loadLicenses();
-    }
-    
-    async function deleteLicense(licenseKey) {
-        if (confirm('Delete license ' + licenseKey + '?')) {
-            const { error } = await supabase.from('licenses').delete().eq('license_key', licenseKey);
-            if (error) alert('Error: ' + error.message);
-            else loadLicenses();
-        }
-    }
-    
-    // Users Management
-    async function loadUsers() {
-        const { data } = await supabase.from('users').select('*').order('last_verified', { ascending: false });
-        const tbody = document.getElementById('usersBody');
-        
-        if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6">No users registered</td></tr>';
-            return;
-        }
-        
-        tbody.innerHTML = data.map(user => `
-            <tr>
-                <td><code>${user.hwid}</code></td>
-                <td>${user.license_key || 'N/A'}</td>
-                <td>${new Date(user.first_seen).toLocaleDateString()}</td>
-                <td>${user.last_verified ? new Date(user.last_verified).toLocaleString() : 'Never'}</td>
-                <td>${user.verification_count || 0}</td>
-                <td><button class="btn btn-danger" style="padding: 0.3rem 0.8rem;" onclick="banUser('${user.hwid}')">Ban HWID</button></td>
-            </tr>
-        `).join('');
-    }
-    
-    async function banUser(hwid) {
-        if (confirm('Ban HWID: ' + hwid + '? This will prevent all access.')) {
-            // You can implement HWID banning by creating a blacklist table
-            alert('HWID banned (implement blacklist table for production)');
-        }
-    }
-    
-    // Lua Script Generator
-    function generateLuaScript() {
-        const licenseKey = document.getElementById('scriptLicenseSelect').value;
-        if (!licenseKey) {
-            alert('Please select a license key');
-            return;
-        }
-        
-        const script = `--[[
-    LuaGuard Protected Script
-    License: ${licenseKey}
-    This script will only run if whitelist verification passes
-]]--
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    await loadProfile();
+    showDashboard();
+  }
 
-local licenseKey = "${licenseKey}"
-local hwid = game:GetService("RbxAnalyticsService"):GetClientId() -- Roblox example, change for your executor
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN') {
+      currentUser = session.user;
+      await loadProfile();
+      showDashboard();
+    } else if (event === 'SIGNED_OUT') {
+      currentUser = null; currentProfile = null;
+      showLanding();
+    }
+  });
+}
 
-local function verifyWhitelist()
-    local http = game:GetService("HttpService")
-    local url = "${SUPABASE_URL}/rest/v1/rpc/verify_whitelist"
-    local headers = {
-        ["Content-Type"] = "application/json",
-        ["apikey"] = "${SUPABASE_ANON_KEY}",
-        ["Authorization"] = "Bearer ${SUPABASE_ANON_KEY}"
-    }
-    
-    local body = http:JSONEncode({
-        p_license_key = licenseKey,
-        p_hwid = hwid
-    })
-    
-    local success, response = pcall(function()
-        return http:PostAsync(url, body, Enum.HttpContentType.ApplicationJson, false, headers)
-    end)
-    
-    if success then
-        local data = http:JSONDecode(response)
-        if data.success then
-            print("✅ Whitelist verified! Access granted.")
-            return true
-        else
-            warn("❌ Whitelist failed: " .. data.message)
-            return false
-        end
-    else
-        warn("❌ Verification failed: " .. tostring(response))
-        return false
-    end
-end
+async function loadPublicStats() {
+  try {
+    const { count: lc } = await sb.from('licenses').select('*', { count: 'exact', head: true }).eq('status','active');
+    const { count: sc } = await sb.from('scripts').select('*', { count: 'exact', head: true });
+    const { count: ac } = await sb.from('auth_logs').select('*', { count: 'exact', head: true }).gte('created_at', new Date(Date.now()-86400000).toISOString());
+    document.getElementById('stat-licenses').textContent = lc ?? '?';
+    document.getElementById('stat-scripts').textContent = sc ?? '?';
+    document.getElementById('stat-checks').textContent = ac ?? '?';
+  } catch(e) {}
+}
 
--- Main execution
-if verifyWhitelist() then
-    print("🔓 License verified - loading protected content")
-    -- YOUR PROTECTED CODE HERE
-    print("Hello from protected script!")
-else
-    print("⛔ Access denied - invalid license")
-    -- Optional: crash or exit
-    error("Unauthorized")
-end`;
-        
-        document.getElementById('luaScriptContent').textContent = script;
-        document.getElementById('generatedScript').style.display = 'block';
-    }
-    
-    function copyLuaScript() {
-        const script = document.getElementById('luaScriptContent').textContent;
-        navigator.clipboard.writeText(script);
-        alert('Script copied to clipboard!');
-    }
-    
-    // Whitelist verification function (called by Lua scripts via RPC)
-    async function verifyWhitelistAPI(licenseKey, hwid) {
-        // First, check if license exists and is valid
-        const { data: license } = await supabase
-            .from('licenses')
-            .select('*')
-            .eq('license_key', licenseKey)
-            .single();
-        
-        let success = false;
-        let message = '';
-        
-        if (!license) {
-            message = 'Invalid license key';
-        } else if (!license.is_active) {
-            message = 'License is deactivated';
-        } else if (license.expires_at && new Date(license.expires_at) < new Date()) {
-            message = 'License expired';
-        } else if (license.bound_hwid && license.bound_hwid !== hwid) {
-            message = 'HWID mismatch';
-        } else {
-            success = true;
-            message = 'Access granted';
-            
-            // Update user tracking
-            const { data: user } = await supabase
-                .from('users')
-                .select('*')
-                .eq('hwid', hwid)
-                .single();
-            
-            if (user) {
-                await supabase
-                    .from('users')
-                    .update({ 
-                        last_verified: new Date(),
-                        verification_count: (user.verification_count || 0) + 1,
-                        license_key: licenseKey
-                    })
-                    .eq('hwid', hwid);
-            } else {
-                await supabase.from('users').insert({
-                    hwid: hwid,
-                    license_key: licenseKey,
-                    first_seen: new Date(),
-                    last_verified: new Date(),
-                    verification_count: 1
-                });
-            }
-        }
-        
-        // Log verification attempt
-        await supabase.from('verification_logs').insert({
-            license_key: licenseKey,
-            hwid: hwid,
-            success: success,
-            verified_at: new Date()
-        });
-        
-        return { success, message };
-    }
-    
-    // Expose verification function for API endpoint
-    window.verifyWhitelistAPI = verifyWhitelistAPI;
-    
-    // UI Functions
-    function switchTab(tab) {
-        document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-        document.getElementById(`${tab}-tab`).style.display = 'block';
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
-        
-        if (tab === 'dashboard') loadDashboard();
-        else if (tab === 'whitelist') loadLicenses();
-        else if (tab === 'users') loadUsers();
-    }
-    
-    function openCreateLicenseModal() {
-        document.getElementById('licenseModal').style.display = 'flex';
-    }
-    
-    function closeModal() {
-        document.getElementById('licenseModal').style.display = 'none';
-        document.getElementById('newLicenseKey').value = '';
-        document.getElementById('newHwid').value = '';
-        document.getElementById('newExpiry').value = '';
-    }
-    
-    // Initialize
-    initSupabase();
+async function loadProfile() {
+  const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  currentProfile = data;
+}
+
+// ══════════════════════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════════════════════
+function openAuth(tab='login') {
+  document.getElementById('authModal').classList.add('show');
+  switchTab(tab);
+  clearAuthMsgs();
+}
+function closeAuth() { document.getElementById('authModal').classList.remove('show'); }
+
+function switchTab(tab) {
+  document.getElementById('loginForm').style.display = tab==='login' ? 'block' : 'none';
+  document.getElementById('registerForm').style.display = tab==='register' ? 'block' : 'none';
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0 && tab==='login')||(i===1 && tab==='register')));
+  clearAuthMsgs();
+}
+
+function clearAuthMsgs() {
+  document.getElementById('authError').classList.remove('show');
+  document.getElementById('authSuccess').classList.remove('show');
+}
+function showAuthError(msg) {
+  const el = document.getElementById('authError');
+  el.textContent = msg; el.classList.add('show');
+  document.getElementById('authSuccess').classList.remove('show');
+}
+function showAuthSuccess(msg) {
+  const el = document.getElementById('authSuccess');
+  el.textContent = msg; el.classList.add('show');
+  document.getElementById('authError').classList.remove('show');
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  if (!email||!pass) return showAuthError('Please fill in all fields.');
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) return showAuthError(error.message);
+  closeAuth();
+}
+
+async function doRegister() {
+  const username = document.getElementById('regUsername').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const pass = document.getElementById('regPass').value;
+  if (!username||!email||!pass) return showAuthError('Please fill in all fields.');
+  if (pass.length < 6) return showAuthError('Password must be at least 6 characters.');
+
+  const { data, error } = await sb.auth.signUp({ email, password: pass });
+  if (error) return showAuthError(error.message);
+
+  if (data.user) {
+    await sb.from('profiles').insert({ id: data.user.id, username, email, role: 'user' });
+  }
+  showAuthSuccess('Account created! Check your email to confirm, then sign in.');
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+}
+
+// ══════════════════════════════════════════════════════════
+//  SHOW/HIDE VIEWS
+// ══════════════════════════════════════════════════════════
+function showLanding() {
+  document.getElementById('landing').style.display = 'flex';
+  document.getElementById('dashboard').style.display = 'none';
+  loadPublicStats();
+}
+
+function showDashboard() {
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+
+  const isAdmin = currentProfile?.role === 'admin';
+  document.getElementById('navUsers').style.display = isAdmin ? 'flex' : 'none';
+  document.getElementById('navLogs').style.display = isAdmin ? 'flex' : 'none';
+
+  const name = currentProfile?.username || currentUser?.email?.split('@')[0] || 'User';
+  document.getElementById('sidebarName').textContent = name;
+  document.getElementById('sidebarRole').textContent = currentProfile?.role || 'user';
+  document.getElementById('sidebarRole').className = 'user-role ' + (currentProfile?.role || 'user');
+  document.getElementById('sidebarAvatar').textContent = name[0].toUpperCase();
+  document.getElementById('welcomeName').textContent = name;
+
+  showPage('overview');
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+name)?.classList.add('active');
+  document.querySelector(`[data-page="${name}"]`)?.classList.add('active');
+
+  const loaders = {
+    overview: loadOverview,
+    licenses: loadLicenses,
+    scripts: loadScripts,
+    users: loadUsers,
+    logs: loadLogs,
+    loader: renderLoader,
+    mykey: loadMyKey,
+  };
+  if (loaders[name]) loaders[name]();
+}
+
+// ══════════════════════════════════════════════════════════
+//  OVERVIEW
+// ══════════════════════════════════════════════════════════
+async function loadOverview() {
+  const uid = currentUser.id;
+  const isAdmin = currentProfile?.role === 'admin';
+
+  let lq = sb.from('licenses').select('*');
+  if (!isAdmin) lq = lq.eq('user_id', uid);
+  const { data: licenses } = await lq.order('created_at', { ascending: false }).limit(5);
+
+  const all = licenses || [];
+  document.getElementById('ov-total').textContent = all.length;
+  document.getElementById('ov-active').textContent = all.filter(l=>l.status==='active').length;
+  document.getElementById('ov-banned').textContent = all.filter(l=>l.status==='banned').length;
+
+  const { count: sc } = await sb.from('scripts').select('*',{count:'exact',head:true}).eq('owner_id', uid);
+  document.getElementById('ov-scripts').textContent = sc ?? 0;
+
+  // Recent licenses list
+  const rl = document.getElementById('recentLicenses');
+  if (!all.length) { rl.innerHTML = '<div class="empty-state"><div class="icon">🔑</div><p>No licenses yet.</p></div>'; }
+  else {
+    rl.innerHTML = all.slice(0,5).map(l=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+        <span class="key-display">${l.key}</span>
+        <span class="badge badge-${l.status}">${l.status}</span>
+      </div>`).join('');
+  }
+
+  // Recent logs
+  const logsEl = document.getElementById('recentLogs');
+  let loglq = sb.from('auth_logs').select('*').order('created_at',{ascending:false}).limit(6);
+  if (!isAdmin) loglq = loglq.eq('license_key', all.map(x=>x.key));
+  const { data: logs } = await loglq;
+  if (!logs?.length) { logsEl.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>No auth logs yet.</p></div>'; }
+  else {
+    logsEl.innerHTML = logs.map(l=>`
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
+        <span style="color:var(--muted);font-family:var(--mono);">${l.license_key?.substring(0,16)}…</span>
+        <span class="badge badge-${l.success?'active':'banned'}">${l.success?'OK':'FAIL'}</span>
+      </div>`).join('');
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  LICENSES
+// ══════════════════════════════════════════════════════════
+async function loadLicenses() {
+  const isAdmin = currentProfile?.role === 'admin';
+  let q = sb.from('licenses').select('*, profiles(username), scripts(name)');
+  if (!isAdmin) q = q.eq('user_id', currentUser.id);
+  const { data } = await q.order('created_at',{ascending:false});
+  allLicenses = data || [];
+  renderLicenses(allLicenses);
+}
+
+function renderLicenses(list) {
+  const tbody = document.getElementById('licensesBody');
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon">🔑</div><p>No licenses found. Create one to get started.</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(l => {
+    const exp = l.expires_at ? new Date(l.expires_at).toLocaleDateString() : '∞ Never';
+    const hwid = l.hwid ? `<span style="font-family:var(--mono);font-size:11px;color:var(--muted);">${l.hwid.substring(0,12)}…</span>` : `<span style="color:var(--muted);font-size:12px;">Not bound</span>`;
+    return `<tr>
+      <td><span class="key-display" onclick="copyText('${l.key}',this)">${l.key}</span></td>
+      <td>${l.profiles?.username || '—'}</td>
+      <td>${l.scripts?.name || '—'}</td>
+      <td><span class="badge badge-${l.status}">${l.status}</span></td>
+      <td>${hwid}</td>
+      <td style="font-size:13px;color:var(--muted);">${exp}</td>
+      <td>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${l.status!=='active'?`<button class="btn btn-success btn-sm" onclick="setLicenseStatus('${l.id}','active')">Activate</button>`:''}
+          ${l.status!=='banned'?`<button class="btn btn-danger btn-sm" onclick="setLicenseStatus('${l.id}','banned')">Ban</button>`:''}
+          ${l.hwid?`<button class="btn btn-ghost btn-sm" onclick="resetHWID('${l.id}')">Reset HWID</button>`:''}
+          <button class="btn btn-ghost btn-sm" onclick="deleteLicense('${l.id}')">Delete</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterLicenses() {
+  const search = document.getElementById('licenseSearch').value.toLowerCase();
+  const status = document.getElementById('licenseStatusFilter').value;
+  const filtered = allLicenses.filter(l => {
+    const matchSearch = l.key.toLowerCase().includes(search) || (l.profiles?.username||'').toLowerCase().includes(search);
+    const matchStatus = !status || l.status === status;
+    return matchSearch && matchStatus;
+  });
+  renderLicenses(filtered);
+}
+
+function generateKey() {
+  const seg = () => Math.random().toString(36).substring(2,6).toUpperCase();
+  return `VOID-${seg()}-${seg()}-${seg()}`;
+}
+
+async function openNewLicenseModal() {
+  const { data: scripts } = await sb.from('scripts').select('id,name').eq('owner_id', currentUser.id);
+  const { data: profiles } = currentProfile?.role === 'admin'
+    ? await sb.from('profiles').select('id,username')
+    : { data: [currentProfile] };
+
+  const scriptOptions = (scripts||[]).map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  const userOptions = (profiles||[]).map(p=>`<option value="${p.id}">${p.username}</option>`).join('');
+
+  openGenericModal('New License', 'Generate a license key for a user.', `
+    <div class="form-group"><label>License Key</label>
+      <div style="display:flex;gap:8px;">
+        <input id="gf-key" value="${generateKey()}" style="font-family:var(--mono);flex:1;" />
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('gf-key').value='${generateKey()}'">↺ Gen</button>
+      </div>
+    </div>
+    <div class="form-group"><label>Assign to user</label><select id="gf-user">${userOptions}</select></div>
+    <div class="form-group"><label>Script</label><select id="gf-script"><option value="">No script</option>${scriptOptions}</select></div>
+    <div class="form-group"><label>Expires (leave blank = never)</label><input type="date" id="gf-exp" /></div>
+    <div class="form-group"><label>Status</label>
+      <select id="gf-status"><option value="active">Active</option><option value="inactive">Inactive</option></select>
+    </div>
+  `, async () => {
+    const key = document.getElementById('gf-key').value.trim();
+    const userId = document.getElementById('gf-user').value;
+    const scriptId = document.getElementById('gf-script').value || null;
+    const exp = document.getElementById('gf-exp').value || null;
+    const status = document.getElementById('gf-status').value;
+    if (!key) return showGModalError('Key cannot be empty.');
+    const { error } = await sb.from('licenses').insert({ key, user_id: userId, script_id: scriptId, status, expires_at: exp });
+    if (error) return showGModalError(error.message);
+    closeGenericModal(); toast('License created ✓', 'success'); loadLicenses();
+  });
+}
+
+async function setLicenseStatus(id, status) {
+  const { error } = await sb.from('licenses').update({ status }).eq('id', id);
+  if (error) return toast(error.message, 'error');
+  toast(`License ${status} ✓`, 'success'); loadLicenses();
+}
+
+async function resetHWID(id) {
+  const { error } = await sb.from('licenses').update({ hwid: null }).eq('id', id);
+  if (error) return toast(error.message, 'error');
+  toast('HWID reset ✓', 'success'); loadLicenses();
+}
+
+async function deleteLicense(id) {
+  openGenericModal('Delete License', 'This action is permanent. The license will be removed.', '', async () => {
+    const { error } = await sb.from('licenses').delete().eq('id', id);
+    if (error) return showGModalError(error.message);
+    closeGenericModal(); toast('Deleted ✓', 'success'); loadLicenses();
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+//  SCRIPTS
+// ══════════════════════════════════════════════════════════
+async function loadScripts() {
+  const isAdmin = currentProfile?.role === 'admin';
+  let q = sb.from('scripts').select('*');
+  if (!isAdmin) q = q.eq('owner_id', currentUser.id);
+  const { data } = await q.order('created_at',{ascending:false});
+  const scripts = data || [];
+  const tbody = document.getElementById('scriptsBody');
+  if (!scripts.length) {
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="icon">📜</div><p>No scripts yet. Create one and start assigning licenses.</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = scripts.map(s => {
+    const created = new Date(s.created_at).toLocaleDateString();
+    return `<tr>
+      <td style="font-weight:600;">${s.name}</td>
+      <td style="color:var(--muted);font-size:13px;">${s.description||'—'}</td>
+      <td id="script-lcount-${s.id}">…</td>
+      <td style="font-size:13px;color:var(--muted);">${created}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteScript('${s.id}')">Delete</button></td>
+    </tr>`;
+  }).join('');
+
+  // Load license counts
+  for (const s of scripts) {
+    const { count } = await sb.from('licenses').select('*',{count:'exact',head:true}).eq('script_id', s.id);
+    const el = document.getElementById(`script-lcount-${s.id}`);
+    if (el) el.textContent = count ?? 0;
+  }
+}
+
+function openNewScriptModal() {
+  openGenericModal('New Script', 'Register a script to assign licenses to.', `
+    <div class="form-group"><label>Script name</label><input id="gf-sname" placeholder="e.g. AimAssist Pro" /></div>
+    <div class="form-group"><label>Description</label><textarea id="gf-sdesc" placeholder="Short description (optional)"></textarea></div>
+  `, async () => {
+    const name = document.getElementById('gf-sname').value.trim();
+    const desc = document.getElementById('gf-sdesc').value.trim();
+    if (!name) return showGModalError('Name is required.');
+    const { error } = await sb.from('scripts').insert({ name, description: desc, owner_id: currentUser.id });
+    if (error) return showGModalError(error.message);
+    closeGenericModal(); toast('Script created ✓', 'success'); loadScripts();
+  });
+}
+
+async function deleteScript(id) {
+  openGenericModal('Delete Script', 'Licenses using this script will lose their script assignment.', '', async () => {
+    await sb.from('licenses').update({ script_id: null }).eq('script_id', id);
+    const { error } = await sb.from('scripts').delete().eq('id', id);
+    if (error) return showGModalError(error.message);
+    closeGenericModal(); toast('Deleted ✓', 'success'); loadScripts();
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+//  USERS (admin)
+// ══════════════════════════════════════════════════════════
+async function loadUsers() {
+  if (currentProfile?.role !== 'admin') return;
+  const { data } = await sb.from('profiles').select('*').order('created_at',{ascending:false});
+  const users = data || [];
+  const tbody = document.getElementById('usersBody');
+  if (!users.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">No users.</div></td></tr>'; return; }
+  tbody.innerHTML = users.map(u => {
+    const joined = new Date(u.created_at).toLocaleDateString();
+    return `<tr>
+      <td style="font-weight:600;">${u.username||'—'}</td>
+      <td style="color:var(--muted);font-size:13px;">${u.email||'—'}</td>
+      <td><span class="badge badge-${u.role}">${u.role}</span></td>
+      <td id="user-lcount-${u.id}">…</td>
+      <td style="font-size:13px;color:var(--muted);">${joined}</td>
+      <td>
+        ${u.role!=='admin'?`<button class="btn btn-ghost btn-sm" onclick="promoteUser('${u.id}')">Make admin</button>`:''}
+      </td>
+    </tr>`;
+  }).join('');
+
+  for (const u of users) {
+    const { count } = await sb.from('licenses').select('*',{count:'exact',head:true}).eq('user_id', u.id);
+    const el = document.getElementById(`user-lcount-${u.id}`);
+    if (el) el.textContent = count ?? 0;
+  }
+}
+
+async function promoteUser(id) {
+  const { error } = await sb.from('profiles').update({ role: 'admin' }).eq('id', id);
+  if (error) return toast(error.message, 'error');
+  toast('User promoted to admin ✓', 'success'); loadUsers();
+}
+
+// ══════════════════════════════════════════════════════════
+//  AUTH LOGS
+// ══════════════════════════════════════════════════════════
+async function loadLogs() {
+  const { data } = await sb.from('auth_logs').select('*').order('created_at',{ascending:false}).limit(100);
+  const logs = data || [];
+  const tbody = document.getElementById('logsBody');
+  if (!logs.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="icon">📋</div><p>No auth logs yet.</p></div></td></tr>'; return; }
+  tbody.innerHTML = logs.map(l => {
+    const t = new Date(l.created_at).toLocaleString();
+    return `<tr>
+      <td style="font-size:12px;color:var(--muted);font-family:var(--mono);">${t}</td>
+      <td><span class="key-display">${l.license_key}</span></td>
+      <td style="font-family:var(--mono);font-size:12px;color:var(--muted);">${l.hwid?.substring(0,16)||'—'}…</td>
+      <td><span class="badge badge-${l.success?'active':'banned'}">${l.success?'PASS':'FAIL'}</span></td>
+      <td style="font-size:13px;color:var(--muted);">${l.reason||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+//  LOADER CODE
+// ══════════════════════════════════════════════════════════
+function renderLoader() {
+  const code = `<span style="color:#4a4a7a;">--[[
+  VoidAuth Lua Loader  v1.0
+  Place this at the TOP of your script.
+  Replace YOUR_KEY with the user's license key.
+--]]</span>
+
+<span style="color:#a78bfa;">local</span> VoidAuth = {}
+
+VoidAuth.endpoint = <span style="color:#22d3a0;">"${SUPABASE_URL}/functions/v1/check_license"</span>
+
+<span style="color:#4a4a7a;">-- Simple HWID using username + hostname (adapt to your executor)</span>
+<span style="color:#a78bfa;">local function</span> <span style="color:#60a5fa;">getHWID</span>()
+  <span style="color:#a78bfa;">local</span> ok, sysinfo = pcall(<span style="color:#a78bfa;">function</span>()
+    <span style="color:#a78bfa;">return</span> game:GetService(<span style="color:#22d3a0;">"RbxAnalyticsService"</span>):GetClientId()
+  <span style="color:#a78bfa;">end</span>)
+  <span style="color:#a78bfa;">if</span> ok <span style="color:#a78bfa;">then return</span> sysinfo <span style="color:#a78bfa;">end</span>
+  <span style="color:#a78bfa;">return</span> tostring(math.random(1e12)) <span style="color:#4a4a7a;">-- fallback (not recommended)</span>
+<span style="color:#a78bfa;">end</span>
+
+<span style="color:#a78bfa;">function</span> <span style="color:#60a5fa;">VoidAuth.check</span>(key, hwid)
+  <span style="color:#a78bfa;">if not</span> key <span style="color:#a78bfa;">or</span> key == <span style="color:#22d3a0;">""</span> <span style="color:#a78bfa;">then return</span> false, <span style="color:#22d3a0;">"No key provided"</span> <span style="color:#a78bfa;">end</span>
+  hwid = hwid <span style="color:#a78bfa;">or</span> <span style="color:#60a5fa;">getHWID</span>()
+
+  <span style="color:#a78bfa;">local</span> url = VoidAuth.endpoint
+    .. <span style="color:#22d3a0;">"?key="</span> .. key
+    .. <span style="color:#22d3a0;">"&hwid="</span> .. hwid
+
+  <span style="color:#a78bfa;">local</span> ok, res = pcall(game.HttpService.GetAsync,
+    game:GetService(<span style="color:#22d3a0;">"HttpService"</span>), url, true)
+
+  <span style="color:#a78bfa;">if not</span> ok <span style="color:#a78bfa;">then return</span> false, <span style="color:#22d3a0;">"HTTP request failed"</span> <span style="color:#a78bfa;">end</span>
+
+  <span style="color:#a78bfa;">local</span> data = game:GetService(<span style="color:#22d3a0;">"HttpService"</span>):JSONDecode(res)
+  <span style="color:#a78bfa;">return</span> data.success, data.reason
+<span style="color:#a78bfa;">end</span>
+
+<span style="color:#4a4a7a;">-- ── USAGE ──────────────────────────────────────────────────</span>
+<span style="color:#a78bfa;">local</span> KEY  = <span style="color:#22d3a0;">"VOID-XXXX-XXXX-XXXX"</span>   <span style="color:#4a4a7a;">-- replace with user's key</span>
+<span style="color:#a78bfa;">local</span> HWID = <span style="color:#60a5fa;">getHWID</span>()
+
+<span style="color:#a78bfa;">local</span> authorized, reason = <span style="color:#60a5fa;">VoidAuth.check</span>(KEY, HWID)
+
+<span style="color:#a78bfa;">if not</span> authorized <span style="color:#a78bfa;">then</span>
+  error(<span style="color:#22d3a0;">"[VoidAuth] Access denied: "</span> .. (reason <span style="color:#a78bfa;">or</span> <span style="color:#22d3a0;">"invalid key"</span>))
+<span style="color:#a78bfa;">end</span>
+
+<span style="color:#4a4a7a;">-- ✅ License verified — your script starts here</span>`;
+
+  document.getElementById('loaderCode').innerHTML = code;
+
+  const apiCode = `<span style="color:#60a5fa;">GET</span> ${SUPABASE_URL}/functions/v1/check_license
+    ?key=VOID-XXXX-XXXX-XXXX
+    &hwid=USER_HWID_HERE
+
+<span style="color:#4a4a7a;">-- Response (JSON):</span>
+{ <span style="color:#22d3a0;">"success"</span>: true,  <span style="color:#22d3a0;">"reason"</span>: <span style="color:#a78bfa;">null</span> }
+{ <span style="color:#22d3a0;">"success"</span>: false, <span style="color:#22d3a0;">"reason"</span>: <span style="color:#22d3a0;">"Key is banned"</span> }
+{ <span style="color:#22d3a0;">"success"</span>: false, <span style="color:#22d3a0;">"reason"</span>: <span style="color:#22d3a0;">"HWID mismatch"</span> }
+{ <span style="color:#22d3a0;">"success"</span>: false, <span style="color:#22d3a0;">"reason"</span>: <span style="color:#22d3a0;">"License expired"</span> }`;
+  document.getElementById('apiEndpoint').innerHTML = apiCode;
+}
+
+// ══════════════════════════════════════════════════════════
+//  MY LICENSE
+// ══════════════════════════════════════════════════════════
+async function loadMyKey() {
+  const { data } = await sb.from('licenses').select('*, scripts(name)').eq('user_id', currentUser.id).order('created_at',{ascending:false});
+  const card = document.getElementById('myLicenseCard');
+  if (!data?.length) {
+    card.innerHTML = '<div class="empty-state"><div class="icon">🪪</div><p>You have no license assigned yet. Contact your administrator.</p></div>';
+    return;
+  }
+  card.innerHTML = data.map(l => {
+    const exp = l.expires_at ? new Date(l.expires_at).toLocaleDateString() : 'Never';
+    const hwid = l.hwid || 'Not bound yet (bound on first run)';
+    return `
+    <div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <span class="badge badge-${l.status}">${l.status}</span>
+        ${l.status==='active'?'<span style="color:var(--green);font-size:13px;">✓ Authorized</span>':''}
+      </div>
+      <div class="form-group"><label>Your License Key</label>
+        <div class="code-box" style="padding:12px 16px;font-size:15px;cursor:pointer;" onclick="copyText('${l.key}',this)">${l.key}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;">
+        <div><div style="font-size:12px;color:var(--muted);margin-bottom:4px;">SCRIPT</div><div style="font-size:14px;">${l.scripts?.name||'—'}</div></div>
+        <div><div style="font-size:12px;color:var(--muted);margin-bottom:4px;">EXPIRES</div><div style="font-size:14px;">${exp}</div></div>
+        <div style="grid-column:1/-1;"><div style="font-size:12px;color:var(--muted);margin-bottom:4px;">BOUND HWID</div><div style="font-family:var(--mono);font-size:12px;color:var(--muted);">${hwid}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+//  GENERIC MODAL
+// ══════════════════════════════════════════════════════════
+function openGenericModal(title, sub, bodyHTML, onConfirm) {
+  document.getElementById('gModalTitle').textContent = title;
+  document.getElementById('gModalSub').textContent = sub;
+  document.getElementById('gModalBody').innerHTML = bodyHTML;
+  document.getElementById('gModalError').classList.remove('show');
+  gModalCallback = onConfirm;
+  if (!bodyHTML) document.getElementById('gModalOk').textContent = 'Confirm';
+  else document.getElementById('gModalOk').textContent = 'Create';
+  document.getElementById('genericModal').classList.add('show');
+}
+function closeGenericModal() { document.getElementById('genericModal').classList.remove('show'); }
+function showGModalError(msg) {
+  const el = document.getElementById('gModalError');
+  el.textContent = msg; el.classList.add('show');
+}
+async function gModalSubmit() {
+  if (gModalCallback) await gModalCallback();
+}
+
+// ══════════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════════
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  setTimeout(() => t.className = '', 3000);
+}
+
+function copyText(text, el) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = el.textContent;
+    el.textContent = 'Copied!';
+    setTimeout(() => el.textContent = orig, 1200);
+  });
+}
+
+function copySnippet(btn) {
+  const code = `-- VoidAuth Lua Loader
+local key = "VOID-XXXX-XXXX-XXXX"
+local hwid = getHWID()
+local ok, err = VoidAuth.check(key, hwid)
+if not ok then error("Auth failed: " .. (err or "unknown")) end`;
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+
+// Close modals on overlay click
+document.getElementById('authModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeAuth(); });
+document.getElementById('genericModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeGenericModal(); });
+
+// Boot
+init();
 </script>
-
-<!-- Create Supabase RPC Function (run in SQL editor) -->
-<!--
-CREATE OR REPLACE FUNCTION verify_whitelist(p_license_key TEXT, p_hwid TEXT)
-RETURNS JSON AS $$
-DECLARE
-    v_license licenses%ROWTYPE;
-    v_result JSON;
-BEGIN
-    SELECT * INTO v_license FROM licenses WHERE license_key = p_license_key;
-    
-    IF NOT FOUND THEN
-        v_result := json_build_object('success', false, 'message', 'Invalid license key');
-    ELSIF NOT v_license.is_active THEN
-        v_result := json_build_object('success', false, 'message', 'License deactivated');
-    ELSIF v_license.expires_at IS NOT NULL AND v_license.expires_at < NOW() THEN
-        v_result := json_build_object('success', false, 'message', 'License expired');
-    ELSIF v_license.bound_hwid IS NOT NULL AND v_license.bound_hwid != p_hwid THEN
-        v_result := json_build_object('success', false, 'message', 'HWID mismatch');
-    ELSE
-        v_result := json_build_object('success', true, 'message', 'Access granted');
-    END IF;
-    
-    RETURN v_result;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
--->
 </body>
 </html>
