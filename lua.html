@@ -2,11 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LuaShield | Supabase Whitelisting</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;600;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>LuaGuard | Enterprise Whitelisting Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -16,35 +17,34 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #0a0a0f;
+            background: linear-gradient(135deg, #0a0a0f 0%, #0f0f1a 100%);
             color: #eef2ff;
             line-height: 1.5;
+            min-height: 100vh;
         }
 
-        .bg-glow {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
-            background: radial-gradient(circle at 20% 30%, rgba(45, 45, 80, 0.4), #0a0a0f 70%);
+        /* Modern glass morphism */
+        .glass {
+            background: rgba(20, 20, 35, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .container {
-            max-width: 1300px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 2rem 1.5rem;
+            padding: 1rem 2rem;
         }
 
+        /* Navigation */
         .navbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 1rem;
-            margin-bottom: 4rem;
-            padding: 0.75rem 0;
+            padding: 1rem 0;
+            margin-bottom: 2rem;
             border-bottom: 1px solid rgba(255,255,255,0.08);
         }
 
@@ -58,361 +58,753 @@
         }
 
         .logo i {
+            background: none;
             color: #a78bfa;
-            margin-right: 6px;
         }
 
-        .nav-links {
+        .nav-tabs {
             display: flex;
-            gap: 2rem;
-            align-items: center;
+            gap: 1rem;
+            background: rgba(15, 15, 25, 0.5);
+            padding: 0.5rem;
+            border-radius: 60px;
         }
 
-        .nav-links a {
-            color: #cbd5e1;
-            text-decoration: none;
-            font-weight: 500;
+        .tab-btn {
+            padding: 0.7rem 1.8rem;
+            border-radius: 40px;
+            background: transparent;
+            border: none;
+            color: #9ca3af;
+            font-weight: 600;
+            cursor: pointer;
             transition: 0.2s;
         }
 
-        .nav-links a:hover {
-            color: #c084fc;
+        .tab-btn.active {
+            background: linear-gradient(105deg, #7c3aed, #a855f7);
+            color: white;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
         }
 
-        .hero {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            margin: 2rem 0 4rem 0;
-        }
-
-        .badge {
-            background: rgba(192, 132, 252, 0.15);
-            padding: 0.3rem 1rem;
-            border-radius: 40px;
-            font-size: 0.85rem;
-            color: #d8b4fe;
-            display: inline-block;
+        /* Cards */
+        .card {
+            background: rgba(15, 15, 25, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
             margin-bottom: 1.5rem;
         }
 
-        h1 {
-            font-size: 3.5rem;
-            font-weight: 800;
-            background: linear-gradient(to right, #ffffff, #c084fc, #818cf8);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            max-width: 800px;
-            line-height: 1.2;
-            margin-bottom: 1rem;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
         }
 
-        .hero p {
-            font-size: 1.2rem;
-            color: #9ca3af;
-            max-width: 600px;
-            margin-bottom: 2rem;
+        .stat-card {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(168, 85, 247, 0.05));
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-radius: 1rem;
+            padding: 1.5rem;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #c084fc;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        th {
+            color: #c084fc;
+            font-weight: 600;
+        }
+
+        /* Forms */
+        input, select, textarea {
+            background: #111118;
+            border: 1px solid #2d2d3a;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            color: white;
+            font-size: 0.9rem;
+            width: 100%;
+            transition: 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #a855f7;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
         }
 
         .btn-primary {
             background: linear-gradient(105deg, #7c3aed, #a855f7);
-            padding: 0.9rem 2rem;
-            border-radius: 50px;
-            font-weight: 700;
-            border: none;
             color: white;
-            cursor: pointer;
-            transition: 0.2s;
-            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.3);
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.05);
+        .btn-danger {
+            background: linear-gradient(105deg, #dc2626, #ef4444);
+            color: white;
         }
 
-        .btn-secondary {
-            background: rgba(255,255,255,0.05);
+        .btn-success {
+            background: linear-gradient(105deg, #059669, #10b981);
+            color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
             backdrop-filter: blur(8px);
-            padding: 0.9rem 2rem;
-            border-radius: 50px;
-            font-weight: 600;
-            border: 1px solid rgba(255,255,255,0.2);
-            color: #e2e8f0;
-            cursor: pointer;
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
         }
 
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            margin: 5rem 0;
+        .modal-content {
+            max-width: 500px;
+            width: 90%;
+            background: #1a1a2e;
+            border-radius: 1.5rem;
+            padding: 2rem;
         }
 
-        .feature-card {
-            background: rgba(20, 20, 30, 0.6);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 2rem;
-            padding: 2rem 1.5rem;
-            transition: 0.25s ease;
-        }
-
-        .feature-card:hover {
-            border-color: rgba(168, 85, 247, 0.4);
-            transform: translateY(-5px);
-        }
-
-        .feature-icon {
-            font-size: 2.5rem;
-            color: #a78bfa;
+        .alert {
+            padding: 1rem;
+            border-radius: 0.75rem;
             margin-bottom: 1rem;
         }
 
-        .whitelist-panel {
-            background: rgba(12, 12, 20, 0.8);
-            backdrop-filter: blur(12px);
-            border-radius: 2rem;
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 2.5rem;
-            margin: 2rem 0 4rem;
-            text-align: center;
+        .alert-success {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10b981;
+            color: #6ee7b7;
         }
 
-        .input-group {
-            max-width: 500px;
-            margin: 1.5rem auto;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
+        .alert-error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
         }
 
-        .input-group input {
-            background: #111118;
-            border: 1px solid #2d2d3a;
-            padding: 1rem 1.2rem;
-            border-radius: 60px;
-            color: white;
-            font-size: 1rem;
-            outline: none;
+        /* Lua Code Display */
+        .lua-code {
+            background: #0d0d17;
+            border-radius: 1rem;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
         }
 
-        .input-group input:focus {
-            border-color: #a855f7;
-        }
-
-        .status-msg {
-            margin-top: 1.5rem;
-            font-size: 0.95rem;
-            padding: 0.8rem;
-            border-radius: 60px;
-            transition: 0.2s;
-        }
-
-        .loading {
-            opacity: 0.7;
-            pointer-events: none;
-        }
-
-        footer {
-            text-align: center;
-            padding: 3rem 0 1rem;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            margin-top: 3rem;
-            color: #6b7280;
-        }
-
-        @media (max-width: 700px) {
-            h1 { font-size: 2.5rem; }
-            .navbar { flex-direction: column; }
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .nav-tabs { width: 100%; justify-content: center; }
         }
     </style>
 </head>
 <body>
-<div class="bg-glow"></div>
 <div class="container">
+    <!-- Navigation -->
     <nav class="navbar">
-        <div class="logo"><i class="fas fa-shield-haltered"></i> LuaShield</div>
-        <div class="nav-links">
-            <a href="#">Features</a>
-            <a href="#">API</a>
-            <a href="#">Docs</a>
+        <div class="logo"><i class="fas fa-shield-haltered"></i> LuaGuard</div>
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('dashboard')"><i class="fas fa-chart-line"></i> Dashboard</button>
+            <button class="tab-btn" onclick="switchTab('whitelist')"><i class="fas fa-list"></i> Whitelist</button>
+            <button class="tab-btn" onclick="switchTab('users')"><i class="fas fa-users"></i> Users</button>
+            <button class="tab-btn" onclick="switchTab('lua-generator')"><i class="fas fa-code"></i> Lua Scripts</button>
         </div>
     </nav>
 
-    <div class="hero">
-        <div class="badge"><i class="fas fa-database"></i> Supabase Backend · Live Whitelisting</div>
-        <h1>Enterprise Lua Whitelisting</h1>
-        <p>Secure your scripts with Supabase — HWID binding, expiration, and real-time validation.</p>
-        <button class="btn-primary" id="scrollBtn"><i class="fas fa-key"></i> Verify License</button>
+    <!-- Dashboard Tab -->
+    <div id="dashboard-tab" class="tab-content">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fas fa-key" style="font-size: 2rem; color: #a78bfa;"></i>
+                <div class="stat-value" id="totalLicenses">0</div>
+                <div>Total Licenses</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-check-circle" style="font-size: 2rem; color: #10b981;"></i>
+                <div class="stat-value" id="activeLicenses">0</div>
+                <div>Active Licenses</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-users" style="font-size: 2rem; color: #60a5fa;"></i>
+                <div class="stat-value" id="totalUsers">0</div>
+                <div>Total Users</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-chart-line" style="font-size: 2rem; color: #f59e0b;"></i>
+                <div class="stat-value" id="verificationCount">0</div>
+                <div>Verifications Today</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3><i class="fas fa-chart-pie"></i> License Usage Analytics</h3>
+            <canvas id="usageChart" style="max-height: 400px; margin-top: 1rem;"></canvas>
+        </div>
+
+        <div class="card">
+            <h3><i class="fas fa-clock"></i> Recent Verifications</h3>
+            <div class="table-container">
+                <table id="recentLogsTable">
+                    <thead>
+                        <tr><th>License Key</th><th>HWID</th><th>Status</th><th>Time</th></tr>
+                    </thead>
+                    <tbody id="recentLogsBody">
+                        <tr><td colspan="4" style="text-align: center;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
-    <div class="features">
-        <div class="feature-card">
-            <div class="feature-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-            <h3>Supabase PostgreSQL</h3>
-            <p>Scalable backend with row-level security and real-time subscriptions.</p>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon"><i class="fas fa-hourglass-half"></i></div>
-            <h3>Expiration Control</h3>
-            <p>Set license expiry dates. Automatically block expired keys.</p>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon"><i class="fas fa-exchange-alt"></i></div>
-            <h3>HWID Binding</h3>
-            <p>Bind licenses to specific hardware IDs or allow any device.</p>
+    <!-- Whitelist Management Tab -->
+    <div id="whitelist-tab" class="tab-content" style="display: none;">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3><i class="fas fa-plus-circle"></i> Create New License</h3>
+                <button class="btn btn-primary" onclick="openCreateLicenseModal()"><i class="fas fa-plus"></i> Add License</button>
+            </div>
+            
+            <div class="table-container">
+                <table id="licensesTable">
+                    <thead>
+                        <tr><th>License Key</th><th>HWID (Bound)</th><th>Expires</th><th>Status</th><th>Created</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="licensesBody">
+                        <tr><td colspan="6" style="text-align: center;">Loading licenses...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <div class="whitelist-panel" id="whitelistPanel">
-        <h2><i class="fas fa-check-circle" style="color:#a855f7"></i> License Verification</h2>
-        <p style="margin-bottom: 0.5rem;">Connected to Supabase · Real-time database check</p>
-        <div class="input-group">
-            <input type="text" id="licenseKey" placeholder="License key" value="LUA-DEMO-2025">
-            <input type="text" id="hwidInput" placeholder="Hardware ID (HWID)" value="HWID-6620F9A1">
-            <button id="verifyBtn" class="btn-primary" style="width:100%"><i class="fas fa-shield-alt"></i> Verify with Supabase</button>
+    <!-- Users Tab -->
+    <div id="users-tab" class="tab-content" style="display: none;">
+        <div class="card">
+            <h3><i class="fas fa-user-plus"></i> Registered Users & HWIDs</h3>
+            <div class="table-container">
+                <table id="usersTable">
+                    <thead>
+                        <tr><th>HWID</th><th>License Key</th><th>First Seen</th><th>Last Verification</th><th>Verifications</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="usersBody">
+                        <tr><td colspan="6" style="text-align: center;">Loading users...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div id="statusMessage" class="status-msg">🔍 Ready — enter license + HWID to check against Supabase</div>
-        <p style="font-size:0.8rem; margin-top:1rem; color:#6b7280"><i class="fas fa-info-circle"></i> Demo keys: LUA-DEMO-2025 (HWID: HWID-6620F9A1), LUA-PRO-99X (any HWID)</p>
     </div>
 
-    <footer>
-        <p><i class="far fa-copyright"></i> 2025 LuaShield — Powered by Supabase · Enterprise whitelist solution</p>
-    </footer>
+    <!-- Lua Script Generator Tab -->
+    <div id="lua-generator-tab" class="tab-content" style="display: none;">
+        <div class="card">
+            <h3><i class="fas fa-code"></i> Generate Protected Lua Script</h3>
+            <p>Select a license key to generate a whitelist-protected Lua script</p>
+            <select id="scriptLicenseSelect" style="margin: 1rem 0;">
+                <option value="">Select license key...</option>
+            </select>
+            <button class="btn btn-primary" onclick="generateLuaScript()"><i class="fas fa-download"></i> Generate Lua Script</button>
+            <div id="generatedScript" style="margin-top: 1.5rem; display: none;">
+                <h4>Your Protected Lua Script:</h4>
+                <div class="lua-code" id="luaScriptContent"></div>
+                <button class="btn btn-success" style="margin-top: 1rem;" onclick="copyLuaScript()"><i class="fas fa-copy"></i> Copy Script</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create License Modal -->
+<div id="licenseModal" class="modal">
+    <div class="modal-content">
+        <h3><i class="fas fa-key"></i> Create New License</h3>
+        <input type="text" id="newLicenseKey" placeholder="License Key (leave empty for auto-generate)" style="margin: 1rem 0;">
+        <input type="text" id="newHwid" placeholder="HWID to bind (optional)">
+        <input type="datetime-local" id="newExpiry" placeholder="Expiration Date">
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <button class="btn btn-primary" onclick="createLicense()">Create</button>
+            <button class="btn" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
 </div>
 
 <script>
-    // ==================== REPLACE WITH YOUR SUPABASE CREDENTIALS ====================
-    const SUPABASE_URL = 'https://tqninassljbrerabkcyd.supabase.co';      // e.g., 'https://xxxxx.supabase.co'
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxbmluYXNzbGpicmVyYWJrY3lkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDg2NjQwOCwiZXhwIjoyMDk2NDQyNDA4fQ.fmnfNLov87VG1YeV8cihtHM14g3wrqhmIkCwEIzBvpM';
-    // ==============================================================================
-
+    // Supabase Configuration - REPLACE WITH YOUR ACTUAL CREDENTIALS
+    const SUPABASE_URL = 'https://tqninassljbrerabkcyd.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_pXlWJepgj8moF0WN9ZSllA_yR8Ukwtb';
+    
     let supabase;
+    let usageChart = null;
 
-    // Initialize Supabase client
-    function initSupabase() {
-        if (SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
-            document.getElementById('statusMessage').innerHTML = '⚠️ Supabase not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY in the script.';
-            document.getElementById('statusMessage').style.background = 'rgba(220, 60, 90, 0.1)';
-            document.getElementById('verifyBtn').disabled = true;
-            return false;
-        }
+    // Initialize Supabase
+    async function initSupabase() {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Create tables if they don't exist (you need to run this SQL manually in Supabase SQL editor)
+        await setupDatabase();
+        loadDashboard();
+        loadLicenses();
+        loadUsers();
+        loadRecentLogs();
+    }
+
+    // SQL setup (run this once in Supabase SQL editor)
+    async function setupDatabase() {
+        const sql = `
+        -- Licenses table
+        CREATE TABLE IF NOT EXISTS licenses (
+            id SERIAL PRIMARY KEY,
+            license_key TEXT UNIQUE NOT NULL,
+            bound_hwid TEXT,
+            expires_at TIMESTAMPTZ,
+            is_active BOOLEAN DEFAULT true,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        
+        -- Verification logs table
+        CREATE TABLE IF NOT EXISTS verification_logs (
+            id SERIAL PRIMARY KEY,
+            license_key TEXT NOT NULL,
+            hwid TEXT NOT NULL,
+            success BOOLEAN DEFAULT false,
+            verified_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        
+        -- Users/HWID tracking
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            hwid TEXT UNIQUE NOT NULL,
+            license_key TEXT,
+            first_seen TIMESTAMPTZ DEFAULT NOW(),
+            last_verified TIMESTAMPTZ,
+            verification_count INT DEFAULT 0
+        );
+        
+        -- Insert demo licenses
+        INSERT INTO licenses (license_key, bound_hwid, expires_at, is_active) VALUES 
+            ('LUA-DEMO-2025', 'HWID-6620F9A1', NOW() + INTERVAL '90 days', true),
+            ('LUA-PRO-99X', NULL, NOW() + INTERVAL '365 days', true),
+            ('SYS-7G92K', 'HWID-ABC123', NOW() + INTERVAL '30 days', true)
+        ON CONFLICT (license_key) DO NOTHING;
+        
+        -- Enable RLS
+        ALTER TABLE licenses ENABLE ROW LEVEL SECURITY;
+        ALTER TABLE verification_logs ENABLE ROW LEVEL SECURITY;
+        ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+        
+        -- Create policies for public access (for demo)
+        CREATE POLICY "Public read access" ON licenses FOR SELECT USING (true);
+        CREATE POLICY "Public insert access" ON verification_logs FOR INSERT WITH CHECK (true);
+        CREATE POLICY "Public read access logs" ON verification_logs FOR SELECT USING (true);
+        CREATE POLICY "Public access users" ON users FOR ALL USING (true);
+        `;
+        
+        // Note: You need to run this SQL manually in Supabase SQL editor
+        console.log('Database setup SQL ready - please run in Supabase SQL editor');
+    }
+
+    // Dashboard Functions
+    async function loadDashboard() {
         try {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            return true;
-        } catch (e) {
-            console.error('Supabase init error:', e);
-            return false;
+            // Get total licenses
+            const { data: licenses } = await supabase.from('licenses').select('*');
+            document.getElementById('totalLicenses').textContent = licenses?.length || 0;
+            document.getElementById('activeLicenses').textContent = licenses?.filter(l => l.is_active).length || 0;
+            
+            // Get total users
+            const { data: users } = await supabase.from('users').select('*');
+            document.getElementById('totalUsers').textContent = users?.length || 0;
+            
+            // Get today's verifications
+            const today = new Date().toISOString().split('T')[0];
+            const { data: logs } = await supabase
+                .from('verification_logs')
+                .select('*')
+                .gte('verified_at', today);
+            document.getElementById('verificationCount').textContent = logs?.length || 0;
+            
+            // Create chart
+            const last7Days = Array.from({length: 7}, (_, i) => {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                return d.toISOString().split('T')[0];
+            }).reverse();
+            
+            const counts = await Promise.all(last7Days.map(async date => {
+                const { count } = await supabase
+                    .from('verification_logs')
+                    .select('*', { count: 'exact', head: true })
+                    .gte('verified_at', date)
+                    .lt('verified_at', date + 'T23:59:59');
+                return count || 0;
+            }));
+            
+            if (usageChart) usageChart.destroy();
+            const ctx = document.getElementById('usageChart').getContext('2d');
+            usageChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: last7Days, datasets: [{ label: 'Verifications', data: counts, borderColor: '#a855f7', backgroundColor: 'rgba(168, 85, 247, 0.1)' }] }
+            });
+        } catch (error) {
+            console.error('Error loading dashboard:', error);
         }
-    }
-
-    async function verifyWithSupabase(licenseKey, hwid) {
-        if (!licenseKey.trim() || !hwid.trim()) {
-            return { success: false, message: '❌ License key and HWID are required.' };
-        }
-
-        // Query Supabase for the license
-        const { data, error } = await supabase
-            .from('whitelist_licenses')
-            .select('*')
-            .eq('license_key', licenseKey.trim().toUpperCase())
-            .maybeSingle();
-
-        if (error) {
-            console.error('Supabase query error:', error);
-            return { success: false, message: 'Database error. Contact support.' };
-        }
-
-        if (!data) {
-            return { success: false, message: '❌ Invalid license key. Not found in whitelist database.' };
-        }
-
-        // Check if license is active
-        if (!data.is_active) {
-            return { success: false, message: '⛔ License is deactivated. Contact administrator.' };
-        }
-
-        // Check expiration
-        if (data.expires_at) {
-            const expiryDate = new Date(data.expires_at);
-            if (expiryDate < new Date()) {
-                return { success: false, message: `⏰ License expired on ${expiryDate.toLocaleDateString()}. Renew required.` };
-            }
-        }
-
-        // Check HWID binding
-        const isValidHwid = !data.hwid || data.hwid === hwid.trim();
-        if (!isValidHwid) {
-            return { 
-                success: false, 
-                message: `🔒 HWID mismatch! This license is bound to: ${data.hwid}. Your HWID: ${hwid}` 
-            };
-        }
-
-        // Format expiry message
-        let expiryMsg = '';
-        if (data.expires_at) {
-            const expiryDate = new Date(data.expires_at);
-            expiryMsg = ` Expires: ${expiryDate.toLocaleDateString()}.`;
-        }
-
-        return { 
-            success: true, 
-            message: `✅ ACCESS GRANTED! License "${data.license_key}" is valid.${expiryMsg}` 
-        };
-    }
-
-    // UI Elements
-    const verifyBtn = document.getElementById('verifyBtn');
-    const licenseInput = document.getElementById('licenseKey');
-    const hwidInput = document.getElementById('hwidInput');
-    const statusDiv = document.getElementById('statusMessage');
-    const scrollBtn = document.getElementById('scrollBtn');
-
-    async function performVerification() {
-        if (!supabase) {
-            statusDiv.innerHTML = '⚠️ Supabase not initialized. Check configuration.';
-            statusDiv.style.background = 'rgba(220, 60, 90, 0.1)';
-            return;
-        }
-
-        // Show loading state
-        const originalText = verifyBtn.innerHTML;
-        verifyBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Verifying...';
-        verifyBtn.disabled = true;
-
-        const license = licenseInput.value;
-        const hwid = hwidInput.value;
-        
-        const result = await verifyWithSupabase(license, hwid);
-        
-        statusDiv.innerHTML = `<i class="fas ${result.success ? 'fa-check-circle' : 'fa-times-circle'}"></i> ${result.message}`;
-        if (result.success) {
-            statusDiv.style.background = 'rgba(80, 200, 120, 0.15)';
-            statusDiv.style.borderLeft = '3px solid #4ade80';
-        } else {
-            statusDiv.style.background = 'rgba(220, 60, 90, 0.1)';
-            statusDiv.style.borderLeft = '3px solid #f87171';
-        }
-        
-        verifyBtn.innerHTML = originalText;
-        verifyBtn.disabled = false;
-    }
-
-    // Initialize and event listeners
-    const isConfigured = initSupabase();
-    if (isConfigured) {
-        verifyBtn.addEventListener('click', performVerification);
-        licenseInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') performVerification(); });
-        hwidInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') performVerification(); });
     }
     
-    scrollBtn.addEventListener('click', () => {
-        document.getElementById('whitelistPanel').scrollIntoView({ behavior: 'smooth' });
-    });
+    async function loadRecentLogs() {
+        const { data } = await supabase
+            .from('verification_logs')
+            .select('*')
+            .order('verified_at', { ascending: false })
+            .limit(10);
+        
+        const tbody = document.getElementById('recentLogsBody');
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4">No verifications yet</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = data.map(log => `
+            <tr>
+                <td>${log.license_key}</td>
+                <td><code>${log.hwid}</code></td>
+                <td style="color: ${log.success ? '#10b981' : '#ef4444'}">${log.success ? '✅ Success' : '❌ Failed'}</td>
+                <td>${new Date(log.verified_at).toLocaleString()}</td>
+            </tr>
+        `).join('');
+    }
+    
+    // Whitelist Management
+    async function loadLicenses() {
+        const { data } = await supabase.from('licenses').select('*').order('created_at', { ascending: false });
+        const tbody = document.getElementById('licensesBody');
+        
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6">No licenses found</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = data.map(license => `
+            <tr>
+                <td><strong>${license.license_key}</strong></td>
+                <td><code>${license.bound_hwid || 'Any HWID'}</code></td>
+                <td>${license.expires_at ? new Date(license.expires_at).toLocaleDateString() : 'Never'}</td>
+                <td style="color: ${license.is_active ? '#10b981' : '#ef4444'}">${license.is_active ? 'Active' : 'Inactive'}</td>
+                <td>${new Date(license.created_at).toLocaleDateString()}</td>
+                <td>
+                    <button class="btn btn-danger" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;" onclick="toggleLicenseStatus('${license.license_key}', ${!license.is_active})">
+                        ${license.is_active ? 'Deactivate' : 'Activate'}
+                    </button>
+                    <button class="btn" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;" onclick="deleteLicense('${license.license_key}')">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+        
+        // Update script generator dropdown
+        const select = document.getElementById('scriptLicenseSelect');
+        select.innerHTML = '<option value="">Select license key...</option>' + 
+            data.filter(l => l.is_active).map(l => `<option value="${l.license_key}">${l.license_key}</option>`).join('');
+    }
+    
+    async function createLicense() {
+        let licenseKey = document.getElementById('newLicenseKey').value;
+        if (!licenseKey) {
+            licenseKey = 'LUA-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+        }
+        
+        const boundHwid = document.getElementById('newHwid').value || null;
+        const expiryDate = document.getElementById('newExpiry').value;
+        
+        const { error } = await supabase.from('licenses').insert({
+            license_key: licenseKey,
+            bound_hwid: boundHwid,
+            expires_at: expiryDate || null,
+            is_active: true
+        });
+        
+        if (error) {
+            alert('Error creating license: ' + error.message);
+        } else {
+            alert('License created successfully! Key: ' + licenseKey);
+            closeModal();
+            loadLicenses();
+            loadDashboard();
+        }
+    }
+    
+    async function toggleLicenseStatus(licenseKey, activate) {
+        const { error } = await supabase
+            .from('licenses')
+            .update({ is_active: activate })
+            .eq('license_key', licenseKey);
+        
+        if (error) alert('Error: ' + error.message);
+        else loadLicenses();
+    }
+    
+    async function deleteLicense(licenseKey) {
+        if (confirm('Delete license ' + licenseKey + '?')) {
+            const { error } = await supabase.from('licenses').delete().eq('license_key', licenseKey);
+            if (error) alert('Error: ' + error.message);
+            else loadLicenses();
+        }
+    }
+    
+    // Users Management
+    async function loadUsers() {
+        const { data } = await supabase.from('users').select('*').order('last_verified', { ascending: false });
+        const tbody = document.getElementById('usersBody');
+        
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6">No users registered</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = data.map(user => `
+            <tr>
+                <td><code>${user.hwid}</code></td>
+                <td>${user.license_key || 'N/A'}</td>
+                <td>${new Date(user.first_seen).toLocaleDateString()}</td>
+                <td>${user.last_verified ? new Date(user.last_verified).toLocaleString() : 'Never'}</td>
+                <td>${user.verification_count || 0}</td>
+                <td><button class="btn btn-danger" style="padding: 0.3rem 0.8rem;" onclick="banUser('${user.hwid}')">Ban HWID</button></td>
+            </tr>
+        `).join('');
+    }
+    
+    async function banUser(hwid) {
+        if (confirm('Ban HWID: ' + hwid + '? This will prevent all access.')) {
+            // You can implement HWID banning by creating a blacklist table
+            alert('HWID banned (implement blacklist table for production)');
+        }
+    }
+    
+    // Lua Script Generator
+    function generateLuaScript() {
+        const licenseKey = document.getElementById('scriptLicenseSelect').value;
+        if (!licenseKey) {
+            alert('Please select a license key');
+            return;
+        }
+        
+        const script = `--[[
+    LuaGuard Protected Script
+    License: ${licenseKey}
+    This script will only run if whitelist verification passes
+]]--
+
+local licenseKey = "${licenseKey}"
+local hwid = game:GetService("RbxAnalyticsService"):GetClientId() -- Roblox example, change for your executor
+
+local function verifyWhitelist()
+    local http = game:GetService("HttpService")
+    local url = "${SUPABASE_URL}/rest/v1/rpc/verify_whitelist"
+    local headers = {
+        ["Content-Type"] = "application/json",
+        ["apikey"] = "${SUPABASE_ANON_KEY}",
+        ["Authorization"] = "Bearer ${SUPABASE_ANON_KEY}"
+    }
+    
+    local body = http:JSONEncode({
+        p_license_key = licenseKey,
+        p_hwid = hwid
+    })
+    
+    local success, response = pcall(function()
+        return http:PostAsync(url, body, Enum.HttpContentType.ApplicationJson, false, headers)
+    end)
+    
+    if success then
+        local data = http:JSONDecode(response)
+        if data.success then
+            print("✅ Whitelist verified! Access granted.")
+            return true
+        else
+            warn("❌ Whitelist failed: " .. data.message)
+            return false
+        end
+    else
+        warn("❌ Verification failed: " .. tostring(response))
+        return false
+    end
+end
+
+-- Main execution
+if verifyWhitelist() then
+    print("🔓 License verified - loading protected content")
+    -- YOUR PROTECTED CODE HERE
+    print("Hello from protected script!")
+else
+    print("⛔ Access denied - invalid license")
+    -- Optional: crash or exit
+    error("Unauthorized")
+end`;
+        
+        document.getElementById('luaScriptContent').textContent = script;
+        document.getElementById('generatedScript').style.display = 'block';
+    }
+    
+    function copyLuaScript() {
+        const script = document.getElementById('luaScriptContent').textContent;
+        navigator.clipboard.writeText(script);
+        alert('Script copied to clipboard!');
+    }
+    
+    // Whitelist verification function (called by Lua scripts via RPC)
+    async function verifyWhitelistAPI(licenseKey, hwid) {
+        // First, check if license exists and is valid
+        const { data: license } = await supabase
+            .from('licenses')
+            .select('*')
+            .eq('license_key', licenseKey)
+            .single();
+        
+        let success = false;
+        let message = '';
+        
+        if (!license) {
+            message = 'Invalid license key';
+        } else if (!license.is_active) {
+            message = 'License is deactivated';
+        } else if (license.expires_at && new Date(license.expires_at) < new Date()) {
+            message = 'License expired';
+        } else if (license.bound_hwid && license.bound_hwid !== hwid) {
+            message = 'HWID mismatch';
+        } else {
+            success = true;
+            message = 'Access granted';
+            
+            // Update user tracking
+            const { data: user } = await supabase
+                .from('users')
+                .select('*')
+                .eq('hwid', hwid)
+                .single();
+            
+            if (user) {
+                await supabase
+                    .from('users')
+                    .update({ 
+                        last_verified: new Date(),
+                        verification_count: (user.verification_count || 0) + 1,
+                        license_key: licenseKey
+                    })
+                    .eq('hwid', hwid);
+            } else {
+                await supabase.from('users').insert({
+                    hwid: hwid,
+                    license_key: licenseKey,
+                    first_seen: new Date(),
+                    last_verified: new Date(),
+                    verification_count: 1
+                });
+            }
+        }
+        
+        // Log verification attempt
+        await supabase.from('verification_logs').insert({
+            license_key: licenseKey,
+            hwid: hwid,
+            success: success,
+            verified_at: new Date()
+        });
+        
+        return { success, message };
+    }
+    
+    // Expose verification function for API endpoint
+    window.verifyWhitelistAPI = verifyWhitelistAPI;
+    
+    // UI Functions
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+        document.getElementById(`${tab}-tab`).style.display = 'block';
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        if (tab === 'dashboard') loadDashboard();
+        else if (tab === 'whitelist') loadLicenses();
+        else if (tab === 'users') loadUsers();
+    }
+    
+    function openCreateLicenseModal() {
+        document.getElementById('licenseModal').style.display = 'flex';
+    }
+    
+    function closeModal() {
+        document.getElementById('licenseModal').style.display = 'none';
+        document.getElementById('newLicenseKey').value = '';
+        document.getElementById('newHwid').value = '';
+        document.getElementById('newExpiry').value = '';
+    }
+    
+    // Initialize
+    initSupabase();
 </script>
+
+<!-- Create Supabase RPC Function (run in SQL editor) -->
+<!--
+CREATE OR REPLACE FUNCTION verify_whitelist(p_license_key TEXT, p_hwid TEXT)
+RETURNS JSON AS $$
+DECLARE
+    v_license licenses%ROWTYPE;
+    v_result JSON;
+BEGIN
+    SELECT * INTO v_license FROM licenses WHERE license_key = p_license_key;
+    
+    IF NOT FOUND THEN
+        v_result := json_build_object('success', false, 'message', 'Invalid license key');
+    ELSIF NOT v_license.is_active THEN
+        v_result := json_build_object('success', false, 'message', 'License deactivated');
+    ELSIF v_license.expires_at IS NOT NULL AND v_license.expires_at < NOW() THEN
+        v_result := json_build_object('success', false, 'message', 'License expired');
+    ELSIF v_license.bound_hwid IS NOT NULL AND v_license.bound_hwid != p_hwid THEN
+        v_result := json_build_object('success', false, 'message', 'HWID mismatch');
+    ELSE
+        v_result := json_build_object('success', true, 'message', 'Access granted');
+    END IF;
+    
+    RETURN v_result;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+-->
 </body>
 </html>
