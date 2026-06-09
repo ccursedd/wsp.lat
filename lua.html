@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LuaShield | Supabase Whitelisting</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0f;
+            color: #eef2ff;
+            line-height: 1.5;
+        }
+
+        .bg-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: radial-gradient(circle at 20% 30%, rgba(45, 45, 80, 0.4), #0a0a0f 70%);
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 4rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #c084fc, #60a5fa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .logo i {
+            color: #a78bfa;
+            margin-right: 6px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: #c084fc;
+        }
+
+        .hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin: 2rem 0 4rem 0;
+        }
+
+        .badge {
+            background: rgba(192, 132, 252, 0.15);
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            color: #d8b4fe;
+            display: inline-block;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #ffffff, #c084fc, #818cf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            max-width: 800px;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: #9ca3af;
+            max-width: 600px;
+            margin-bottom: 2rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(105deg, #7c3aed, #a855f7);
+            padding: 0.9rem 2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(8px);
+            padding: 0.9rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #e2e8f0;
+            cursor: pointer;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin: 5rem 0;
+        }
+
+        .feature-card {
+            background: rgba(20, 20, 30, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 2rem;
+            padding: 2rem 1.5rem;
+            transition: 0.25s ease;
+        }
+
+        .feature-card:hover {
+            border-color: rgba(168, 85, 247, 0.4);
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            color: #a78bfa;
+            margin-bottom: 1rem;
+        }
+
+        .whitelist-panel {
+            background: rgba(12, 12, 20, 0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 2rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 2.5rem;
+            margin: 2rem 0 4rem;
+            text-align: center;
+        }
+
+        .input-group {
+            max-width: 500px;
+            margin: 1.5rem auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .input-group input {
+            background: #111118;
+            border: 1px solid #2d2d3a;
+            padding: 1rem 1.2rem;
+            border-radius: 60px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: #a855f7;
+        }
+
+        .status-msg {
+            margin-top: 1.5rem;
+            font-size: 0.95rem;
+            padding: 0.8rem;
+            border-radius: 60px;
+            transition: 0.2s;
+        }
+
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem 0 1rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            margin-top: 3rem;
+            color: #6b7280;
+        }
+
+        @media (max-width: 700px) {
+            h1 { font-size: 2.5rem; }
+            .navbar { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="container">
+    <nav class="navbar">
+        <div class="logo"><i class="fas fa-shield-haltered"></i> LuaShield</div>
+        <div class="nav-links">
+            <a href="#">Features</a>
+            <a href="#">API</a>
+            <a href="#">Docs</a>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="badge"><i class="fas fa-database"></i> Supabase Backend · Live Whitelisting</div>
+        <h1>Enterprise Lua Whitelisting</h1>
+        <p>Secure your scripts with Supabase — HWID binding, expiration, and real-time validation.</p>
+        <button class="btn-primary" id="scrollBtn"><i class="fas fa-key"></i> Verify License</button>
+    </div>
+
+    <div class="features">
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+            <h3>Supabase PostgreSQL</h3>
+            <p>Scalable backend with row-level security and real-time subscriptions.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-hourglass-half"></i></div>
+            <h3>Expiration Control</h3>
+            <p>Set license expiry dates. Automatically block expired keys.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-exchange-alt"></i></div>
+            <h3>HWID Binding</h3>
+            <p>Bind licenses to specific hardware IDs or allow any device.</p>
+        </div>
+    </div>
+
+    <div class="whitelist-panel" id="whitelistPanel">
+        <h2><i class="fas fa-check-circle" style="color:#a855f7"></i> License Verification</h2>
+        <p style="margin-bottom: 0.5rem;">Connected to Supabase · Real-time database check</p>
+        <div class="input-group">
+            <input type="text" id="licenseKey" placeholder="License key" value="LUA-DEMO-2025">
+            <input type="text" id="hwidInput" placeholder="Hardware ID (HWID)" value="HWID-6620F9A1">
+            <button id="verifyBtn" class="btn-primary" style="width:100%"><i class="fas fa-shield-alt"></i> Verify with Supabase</button>
+        </div>
+        <div id="statusMessage" class="status-msg">🔍 Ready — enter license + HWID to check against Supabase</div>
+        <p style="font-size:0.8rem; margin-top:1rem; color:#6b7280"><i class="fas fa-info-circle"></i> Demo keys: LUA-DEMO-2025 (HWID: HWID-6620F9A1), LUA-PRO-99X (any HWID)</p>
+    </div>
+
+    <footer>
+        <p><i class="far fa-copyright"></i> 2025 LuaShield — Powered by Supabase · Enterprise whitelist solution</p>
+    </footer>
+</div>
+
+<script>
+    // ==================== REPLACE WITH YOUR SUPABASE CREDENTIALS ====================
+    const SUPABASE_URL = 'https://tqninassljbrerabkcyd.supabase.co';      // e.g., 'https://xxxxx.supabase.co'
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxbmluYXNzbGpicmVyYWJrY3lkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDg2NjQwOCwiZXhwIjoyMDk2NDQyNDA4fQ.fmnfNLov87VG1YeV8cihtHM14g3wrqhmIkCwEIzBvpM';
+    // ==============================================================================
+
+    let supabase;
+
+    // Initialize Supabase client
+    function initSupabase() {
+        if (SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
+            document.getElementById('statusMessage').innerHTML = '⚠️ Supabase not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY in the script.';
+            document.getElementById('statusMessage').style.background = 'rgba(220, 60, 90, 0.1)';
+            document.getElementById('verifyBtn').disabled = true;
+            return false;
+        }
+        try {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            return true;
+        } catch (e) {
+            console.error('Supabase init error:', e);
+            return false;
+        }
+    }
+
+    async function verifyWithSupabase(licenseKey, hwid) {
+        if (!licenseKey.trim() || !hwid.trim()) {
+            return { success: false, message: '❌ License key and HWID are required.' };
+        }
+
+        // Query Supabase for the license
+        const { data, error } = await supabase
+            .from('whitelist_licenses')
+            .select('*')
+            .eq('license_key', licenseKey.trim().toUpperCase())
+            .maybeSingle();
+
+        if (error) {
+            console.error('Supabase query error:', error);
+            return { success: false, message: 'Database error. Contact support.' };
+        }
+
+        if (!data) {
+            return { success: false, message: '❌ Invalid license key. Not found in whitelist database.' };
+        }
+
+        // Check if license is active
+        if (!data.is_active) {
+            return { success: false, message: '⛔ License is deactivated. Contact administrator.' };
+        }
+
+        // Check expiration
+        if (data.expires_at) {
+            const expiryDate = new Date(data.expires_at);
+            if (expiryDate < new Date()) {
+                return { success: false, message: `⏰ License expired on ${expiryDate.toLocaleDateString()}. Renew required.` };
+            }
+        }
+
+        // Check HWID binding
+        const isValidHwid = !data.hwid || data.hwid === hwid.trim();
+        if (!isValidHwid) {
+            return { 
+                success: false, 
+                message: `🔒 HWID mismatch! This license is bound to: ${data.hwid}. Your HWID: ${hwid}` 
+            };
+        }
+
+        // Format expiry message
+        let expiryMsg = '';
+        if (data.expires_at) {
+            const expiryDate = new Date(data.expires_at);
+            expiryMsg = ` Expires: ${expiryDate.toLocaleDateString()}.`;
+        }
+
+        return { 
+            success: true, 
+            message: `✅ ACCESS GRANTED! License "${data.license_key}" is valid.${expiryMsg}` 
+        };
+    }
+
+    // UI Elements
+    const verifyBtn = document.getElementById('verifyBtn');
+    const licenseInput = document.getElementById('licenseKey');
+    const hwidInput = document.getElementById('hwidInput');
+    const statusDiv = document.getElementById('statusMessage');
+    const scrollBtn = document.getElementById('scrollBtn');
+
+    async function performVerification() {
+        if (!supabase) {
+            statusDiv.innerHTML = '⚠️ Supabase not initialized. Check configuration.';
+            statusDiv.style.background = 'rgba(220, 60, 90, 0.1)';
+            return;
+        }
+
+        // Show loading state
+        const originalText = verifyBtn.innerHTML;
+        verifyBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Verifying...';
+        verifyBtn.disabled = true;
+
+        const license = licenseInput.value;
+        const hwid = hwidInput.value;
+        
+        const result = await verifyWithSupabase(license, hwid);
+        
+        statusDiv.innerHTML = `<i class="fas ${result.success ? 'fa-check-circle' : 'fa-times-circle'}"></i> ${result.message}`;
+        if (result.success) {
+            statusDiv.style.background = 'rgba(80, 200, 120, 0.15)';
+            statusDiv.style.borderLeft = '3px solid #4ade80';
+        } else {
+            statusDiv.style.background = 'rgba(220, 60, 90, 0.1)';
+            statusDiv.style.borderLeft = '3px solid #f87171';
+        }
+        
+        verifyBtn.innerHTML = originalText;
+        verifyBtn.disabled = false;
+    }
+
+    // Initialize and event listeners
+    const isConfigured = initSupabase();
+    if (isConfigured) {
+        verifyBtn.addEventListener('click', performVerification);
+        licenseInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') performVerification(); });
+        hwidInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') performVerification(); });
+    }
+    
+    scrollBtn.addEventListener('click', () => {
+        document.getElementById('whitelistPanel').scrollIntoView({ behavior: 'smooth' });
+    });
+</script>
+</body>
+</html>
