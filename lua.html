@@ -1315,64 +1315,104 @@ async function loadLogs() {
 // ══════════════════════════════════════════════════════════
 function renderLoader() {
   const code = `<span style="color:#4a4a7a;">--[[
-  VoidAuth Lua Loader  v1.0
-  Place this at the TOP of your script.
-  Replace YOUR_KEY with the user's license key.
+  VoidAuth Lua Loader  v2.0
+  Works with: Synapse X, KRNL, Fluxus, Solara, Wave, Celery
+  Paste this at the TOP of your script.
 --]]</span>
 
-<span style="color:#a78bfa;">local</span> VoidAuth = {}
+<span style="color:#a78bfa;">local</span> VoidAuth    = {}
+<span style="color:#a78bfa;">local</span> HttpService = game:GetService(<span style="color:#22d3a0;">"HttpService"</span>)
 
-VoidAuth.endpoint = <span style="color:#22d3a0;">"${SUPABASE_URL}/functions/v1/check_license"</span>
+VoidAuth.endpoint = <span style="color:#22d3a0;">"${SUPABASE_URL}/rest/v1/rpc/check_license"</span>
+VoidAuth.apikey   = <span style="color:#22d3a0;">"${SUPABASE_KEY}"</span>
 
-<span style="color:#4a4a7a;">-- Simple HWID using username + hostname (adapt to your executor)</span>
-<span style="color:#a78bfa;">local function</span> <span style="color:#60a5fa;">getHWID</span>()
-  <span style="color:#a78bfa;">local</span> ok, sysinfo = pcall(<span style="color:#a78bfa;">function</span>()
-    <span style="color:#a78bfa;">return</span> game:GetService(<span style="color:#22d3a0;">"RbxAnalyticsService"</span>):GetClientId()
-  <span style="color:#a78bfa;">end</span>)
-  <span style="color:#a78bfa;">if</span> ok <span style="color:#a78bfa;">then return</span> sysinfo <span style="color:#a78bfa;">end</span>
-  <span style="color:#a78bfa;">return</span> tostring(math.random(1e12)) <span style="color:#4a4a7a;">-- fallback (not recommended)</span>
+<span style="color:#4a4a7a;">-- Detect the executor's HTTP function (works on all major executors)</span>
+<span style="color:#a78bfa;">local function</span> <span style="color:#60a5fa;">httpRequest</span>(url, body)
+  <span style="color:#a78bfa;">local</span> fn = syn <span style="color:#a78bfa;">and</span> syn.request
+           <span style="color:#a78bfa;">or</span> http <span style="color:#a78bfa;">and</span> http.request
+           <span style="color:#a78bfa;">or</span> request
+           <span style="color:#a78bfa;">or</span> http_request
+
+  <span style="color:#a78bfa;">if not</span> fn <span style="color:#a78bfa;">then</span>
+    <span style="color:#a78bfa;">return</span> <span style="color:#a78bfa;">nil</span>, <span style="color:#22d3a0;">"No HTTP function found in this executor"</span>
+  <span style="color:#a78bfa;">end</span>
+
+  <span style="color:#a78bfa;">local</span> ok, res = pcall(fn, {
+    Url     = url,
+    Method  = <span style="color:#22d3a0;">"POST"</span>,
+    Headers = {
+      [<span style="color:#22d3a0;">"Content-Type"</span>]  = <span style="color:#22d3a0;">"application/json"</span>,
+      [<span style="color:#22d3a0;">"apikey"</span>]        = VoidAuth.apikey,
+    },
+    Body = body,
+  })
+
+  <span style="color:#a78bfa;">if not</span> ok <span style="color:#a78bfa;">then return</span> <span style="color:#a78bfa;">nil</span>, <span style="color:#22d3a0;">"Request failed: "</span> .. tostring(res) <span style="color:#a78bfa;">end</span>
+  <span style="color:#a78bfa;">return</span> res, <span style="color:#a78bfa;">nil</span>
 <span style="color:#a78bfa;">end</span>
 
-<span style="color:#a78bfa;">function</span> <span style="color:#60a5fa;">VoidAuth.check</span>(key, hwid)
-  <span style="color:#a78bfa;">if not</span> key <span style="color:#a78bfa;">or</span> key == <span style="color:#22d3a0;">""</span> <span style="color:#a78bfa;">then return</span> false, <span style="color:#22d3a0;">"No key provided"</span> <span style="color:#a78bfa;">end</span>
-  hwid = hwid <span style="color:#a78bfa;">or</span> <span style="color:#60a5fa;">getHWID</span>()
+<span style="color:#4a4a7a;">-- HWID: tries executor identity, falls back to a stored random id</span>
+<span style="color:#a78bfa;">local function</span> <span style="color:#60a5fa;">getHWID</span>()
+  <span style="color:#a78bfa;">if</span> syn <span style="color:#a78bfa;">and</span> syn.get_hwid <span style="color:#a78bfa;">then return</span> syn.get_hwid() <span style="color:#a78bfa;">end</span>
+  <span style="color:#a78bfa;">if</span> get_hwid <span style="color:#a78bfa;">then return</span> get_hwid() <span style="color:#a78bfa;">end</span>
 
-  <span style="color:#a78bfa;">local</span> url = VoidAuth.endpoint
-    .. <span style="color:#22d3a0;">"?key="</span> .. key
-    .. <span style="color:#22d3a0;">"&hwid="</span> .. hwid
+  <span style="color:#4a4a7a;">-- Stable fallback: persist a random id in a file</span>
+  <span style="color:#a78bfa;">local</span> ok, stored = pcall(readfile, <span style="color:#22d3a0;">"voidauth_hwid.txt"</span>)
+  <span style="color:#a78bfa;">if</span> ok <span style="color:#a78bfa;">and</span> stored <span style="color:#a78bfa;">and</span> #stored > 0 <span style="color:#a78bfa;">then return</span> stored <span style="color:#a78bfa;">end</span>
 
-  <span style="color:#a78bfa;">local</span> ok, res = pcall(game.HttpService.GetAsync,
-    game:GetService(<span style="color:#22d3a0;">"HttpService"</span>), url, true)
+  <span style="color:#a78bfa;">local</span> id = HttpService:GenerateGUID(false):gsub(<span style="color:#22d3a0;">"-"</span>, <span style="color:#22d3a0;">""</span>)
+  pcall(writefile, <span style="color:#22d3a0;">"voidauth_hwid.txt"</span>, id)
+  <span style="color:#a78bfa;">return</span> id
+<span style="color:#a78bfa;">end</span>
 
-  <span style="color:#a78bfa;">if not</span> ok <span style="color:#a78bfa;">then return</span> false, <span style="color:#22d3a0;">"HTTP request failed"</span> <span style="color:#a78bfa;">end</span>
+<span style="color:#a78bfa;">function</span> <span style="color:#60a5fa;">VoidAuth.check</span>(key)
+  <span style="color:#a78bfa;">if not</span> key <span style="color:#a78bfa;">or</span> key == <span style="color:#22d3a0;">""</span> <span style="color:#a78bfa;">then</span>
+    <span style="color:#a78bfa;">return</span> false, <span style="color:#22d3a0;">"No key provided"</span>
+  <span style="color:#a78bfa;">end</span>
 
-  <span style="color:#a78bfa;">local</span> data = game:GetService(<span style="color:#22d3a0;">"HttpService"</span>):JSONDecode(res)
-  <span style="color:#a78bfa;">return</span> data.success, data.reason
+  <span style="color:#a78bfa;">local</span> hwid = <span style="color:#60a5fa;">getHWID</span>()
+  <span style="color:#a78bfa;">local</span> body = HttpService:JSONEncode({ license_key = key, hwid = hwid })
+  <span style="color:#a78bfa;">local</span> res, err = <span style="color:#60a5fa;">httpRequest</span>(VoidAuth.endpoint, body)
+
+  <span style="color:#a78bfa;">if not</span> res <span style="color:#a78bfa;">then</span>
+    <span style="color:#a78bfa;">return</span> false, err
+  <span style="color:#a78bfa;">end</span>
+
+  <span style="color:#a78bfa;">local</span> ok2, data = pcall(HttpService.JSONDecode, HttpService, res.Body)
+  <span style="color:#a78bfa;">if not</span> ok2 <span style="color:#a78bfa;">then</span>
+    <span style="color:#a78bfa;">return</span> false, <span style="color:#22d3a0;">"Bad response from server"</span>
+  <span style="color:#a78bfa;">end</span>
+
+  <span style="color:#a78bfa;">return</span> data.success == true, data.reason
 <span style="color:#a78bfa;">end</span>
 
 <span style="color:#4a4a7a;">-- ── USAGE ──────────────────────────────────────────────────</span>
-<span style="color:#a78bfa;">local</span> KEY  = <span style="color:#22d3a0;">"VOID-XXXX-XXXX-XXXX"</span>   <span style="color:#4a4a7a;">-- replace with user's key</span>
-<span style="color:#a78bfa;">local</span> HWID = <span style="color:#60a5fa;">getHWID</span>()
+<span style="color:#a78bfa;">local</span> KEY = <span style="color:#22d3a0;">"VOID-XXXX-XXXX-XXXX"</span>   <span style="color:#4a4a7a;">-- replace with the user's key</span>
 
-<span style="color:#a78bfa;">local</span> authorized, reason = <span style="color:#60a5fa;">VoidAuth.check</span>(KEY, HWID)
+<span style="color:#a78bfa;">local</span> authorized, reason = <span style="color:#60a5fa;">VoidAuth.check</span>(KEY)
 
 <span style="color:#a78bfa;">if not</span> authorized <span style="color:#a78bfa;">then</span>
   error(<span style="color:#22d3a0;">"[VoidAuth] Access denied: "</span> .. (reason <span style="color:#a78bfa;">or</span> <span style="color:#22d3a0;">"invalid key"</span>))
 <span style="color:#a78bfa;">end</span>
 
-<span style="color:#4a4a7a;">-- ✅ License verified — your script starts here</span>`;
+<span style="color:#4a4a7a;">-- ✅ License verified — your script starts below this line</span>`;
 
   document.getElementById('loaderCode').innerHTML = code;
 
-  const apiCode = `<span style="color:#60a5fa;">GET</span> ${SUPABASE_URL}/functions/v1/check_license
-    ?key=VOID-XXXX-XXXX-XXXX
-    &hwid=USER_HWID_HERE
+  const apiCode = `<span style="color:#60a5fa;">POST</span> ${SUPABASE_URL}/rest/v1/rpc/check_license
+Headers:
+  Content-Type: application/json
+  apikey: ${SUPABASE_KEY}
+
+Body (JSON):
+  { <span style="color:#22d3a0;">"license_key"</span>: <span style="color:#22d3a0;">"VOID-XXXX-XXXX-XXXX"</span>, <span style="color:#22d3a0;">"hwid"</span>: <span style="color:#22d3a0;">"USER_HWID"</span> }
 
 <span style="color:#4a4a7a;">-- Response (JSON):</span>
 { <span style="color:#22d3a0;">"success"</span>: true,  <span style="color:#22d3a0;">"reason"</span>: <span style="color:#a78bfa;">null</span> }
 { <span style="color:#22d3a0;">"success"</span>: false, <span style="color:#22d3a0;">"reason"</span>: <span style="color:#22d3a0;">"Key is banned"</span> }
 { <span style="color:#22d3a0;">"success"</span>: false, <span style="color:#22d3a0;">"reason"</span>: <span style="color:#22d3a0;">"HWID mismatch"</span> }
-{ <span style="color:#22d3a0;">"success"</span>: false, <span style="color:#22d3a0;">"reason"</span>: <span style="color:#22d3a0;">"License expired"</span> }`;
+{ <span style="color:#22d3a0;">"success"</span>: false, <span style="color:#22d3a0;">"reason"</span>: <span style="color:#22d3a0;">"License expired"</span> }
+{ <span style="color:#22d3a0;">"success"</span>: false, <span style="color:#22d3a0;">"reason"</span>: <span style="color:#22d3a0;">"License not found"</span> }`;
   document.getElementById('apiEndpoint').innerHTML = apiCode;
 }
 
