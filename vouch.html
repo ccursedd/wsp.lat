@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VouchX — Discord Vouch Generator</title>
+<link rel="icon" type="image/webp" href="https://cordly.pro/logo.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root {
+  --bg: #07070a;
+  --surface: #0e0e14;
+  --surface-2: #141420;
+  --surface-3: #1a1a28;
+  --surface-glass: rgba(14,14,20,0.95);
+  --border: rgba(255,255,255,0.05);
+  --border-med: rgba(255,255,255,0.09);
+  --border-strong: rgba(255,255,255,0.15);
+  --border-accent: rgba(99,102,241,0.35);
+  --accent: #6366f1;
+  --accent-2: #818cf8;
+  --accent-hover: #7577f5;
+  --accent-dim: rgba(99,102,241,0.10);
+  --accent-dim2: rgba(99,102,241,0.18);
+  --success: #10b981;
+  --success-dim: rgba(16,185,129,0.12);
+  --danger: #f43f5e;
+  --danger-dim: rgba(244,63,94,0.12);
+  --warning: #f59e0b;
+  --warning-dim: rgba(245,158,11,0.12);
+  --text: #eeeef5;
+  --text-2: #7e7e9a;
+  --text-3: #3d3d52;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(99,102,241,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 90% 80%, rgba(56,189,248,0.07) 0%, transparent 55%),
+    #07070a;
+}
+
+.main { animation: pageIn .25s ease both; padding: 32px 40px; position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; }
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page-header  { margin-bottom: 28px; }
+.page-title   { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--text); letter-spacing: -.02em; margin-bottom: 4px; }
+.page-subtitle { color: var(--text-2); font-size: .875rem; }
+
+.card { background: rgba(255,255,255,.025); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 22px; margin-bottom: 6px; }
+.card-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.card-desc  { color: var(--text-2); font-size: .8125rem; margin-bottom: 20px; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+.form-group { margin-bottom: 18px; }
+.form-label { display: block; font-size: .8125rem; font-weight: 600; color: var(--text); margin-bottom: 7px; }
+.form-label .req { color: var(--danger); margin-left: 2px; }
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 9px 13px;
+  background: rgba(255,255,255,.04); border: 1px solid var(--border-med);
+  border-radius: var(--radius); color: var(--text); font-size: .875rem;
+  font-family: 'DM Sans', sans-serif; outline: none; -webkit-appearance: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.form-input::placeholder { color: var(--text-3); }
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+}
+.form-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237e7e9a' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+}
+.form-select option { background: #14142a; }
+.form-hint { margin-top: 5px; font-size: .72rem; color: var(--text-3); }
+
+.wh-checker { display: flex; align-items: center; gap: 7px; margin-top: 6px; font-size: .72rem; color: var(--text-3); }
+.wh-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-3); flex-shrink: 0; }
+.wh-dot.valid    { background: var(--success); }
+.wh-dot.invalid  { background: var(--danger); }
+.wh-dot.checking { background: var(--warning); animation: blink .8s step-end infinite; }
+@keyframes blink { 50%{opacity:0} }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 9px 18px; border-radius: var(--radius); font-size: .875rem; font-weight: 600;
+  font-family: 'DM Sans', sans-serif; border: none; transition: background .15s, box-shadow .15s, opacity .15s;
+  text-decoration: none; white-space: nowrap; letter-spacing: -.01em; cursor: pointer;
+}
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn-primary   { background: var(--accent); color: #fff; }
+.btn-primary:hover:not(:disabled)   { background: var(--accent-hover); box-shadow: 0 4px 12px rgba(99,102,241,.3); }
+.btn-secondary { background: rgba(255,255,255,.06); color: var(--text); border: 1px solid var(--border-med); }
+.btn-secondary:hover:not(:disabled) { background: rgba(255,255,255,.09); border-color: var(--border-strong); }
+.btn-success   { background: var(--success-dim); color: var(--success); border: 1px solid rgba(16,185,129,.25); }
+.btn-success:hover:not(:disabled)   { background: rgba(16,185,129,.2); }
+.btn-danger    { background: var(--danger-dim); color: var(--danger); border: 1px solid rgba(244,63,94,.22); }
+.btn-danger:hover:not(:disabled)    { background: rgba(244,63,94,.2); }
+.btn-block { width: 100%; justify-content: center; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+
+.status-msg { display: flex; align-items: flex-start; gap: 9px; padding: 11px 14px; border-radius: var(--radius); font-size: .8125rem; margin-top: 14px; animation: fadeIn .2s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1} }
+.status-msg.error   { background: var(--danger-dim);  color: var(--danger);  border: 1px solid rgba(244,63,94,.2); }
+.status-msg.success { background: var(--success-dim); color: var(--success); border: 1px solid rgba(16,185,129,.2); }
+.status-msg.warning { background: var(--warning-dim); color: var(--warning); border: 1px solid rgba(245,158,11,.2); }
+
+.discord-preview-wrap { background: rgba(30,31,34,.6); border-radius: var(--radius); padding: 16px; min-height: 280px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.dc-msg { display: flex; gap: 12px; }
+.dc-avatar { width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0; background: var(--accent); overflow: hidden; }
+.dc-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.dc-username { font-weight: 600; color: #fff; font-size: .875rem; margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
+.dc-badge { background: #5865f2; color: #fff; font-size: .5625rem; padding: 1px 4px; border-radius: 3px; font-weight: 700; text-transform: uppercase; }
+.dc-embed { margin-top: 4px; background: #2b2d31; border-radius: 4px; padding: 12px 14px 12px 12px; border-left: 4px solid #5865f2; max-width: 430px; display: flex; gap: 12px; flex-wrap: wrap; }
+.dc-embed-content { flex: 1; min-width: 200px; }
+.dc-embed-thumb { width: 72px; height: 72px; border-radius: 4px; object-fit: cover; flex-shrink: 0; }
+.dc-embed-title { font-weight: 700; color: #fff; font-size: .8125rem; margin-bottom: 8px; }
+.dc-field-name  { font-weight: 700; color: #dbdee1; font-size: .72rem; margin-bottom: 2px; }
+.dc-field-val   { color: #b5bac1; font-size: .72rem; white-space: pre-wrap; line-height: 1.4; margin-bottom: 7px; }
+.dc-mention     { background: rgba(88,101,242,.3); color: #c9cdfb; padding: 1px 3px; border-radius: 3px; font-size: .72rem; }
+
+.product-entry { background: rgba(255,255,255,.015); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; margin-bottom: 6px; }
+.product-entry-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.remove-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; background: none; border: none; color: var(--text-3); font-size: .72rem; font-family: 'DM Sans', sans-serif; transition: color .15s; margin-top: 8px; cursor: pointer; }
+.remove-btn:hover { color: var(--danger); }
+
+@media(max-width:840px){
+  .two-col{grid-template-columns:1fr}
+  .main{padding:70px 20px 30px}
+  .product-entry-grid{grid-template-columns:1fr}
+  .btn-row{flex-direction:column}
+  .btn-row .btn{width:100%;justify-content:center}
+}
+@media(max-width:640px){
+  .main{padding:65px 16px 24px}
+  .page-title{font-size:1.125rem}
+}
+</style>
+</head>
+<body>
+
+<main class="main">
+    <div class="page-header">
+        <h1 class="page-title"><span style="color:var(--accent-2);">Vouch</span>X</h1>
+        <p class="page-subtitle">Send automated Discord vouch embeds with live preview.</p>
+    </div>
+
+    <div class="two-col">
+        <!-- Config -->
+        <div class="card" style="margin-bottom:0;">
+            <div class="card-title">Configuration</div>
+            <div class="card-desc">Both webhooks must be from the same Discord channel.</div>
+
+            <div class="form-group">
+                <label class="form-label">Webhook 1 <span class="req">*</span></label>
+                <input type="url" id="webhook1" class="form-input" placeholder="https://discord.com/api/webhooks/..." onblur="checkVouchWebhook(1)">
+                <div class="wh-checker" id="webhook1Checker"><span class="wh-dot"></span><span>Not checked</span></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Webhook 2 (same channel) <span class="req">*</span></label>
+                <input type="url" id="webhook2" class="form-input" placeholder="https://discord.com/api/webhooks/..." onblur="checkVouchWebhook(2)">
+                <div class="wh-checker" id="webhook2Checker"><span class="wh-dot"></span><span>Not checked</span></div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Bot username</label>
+                <input type="text" id="vouchUsername" class="form-input" value="Vouchy" maxlength="80">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Theme image URL <span style="color:var(--text-3);font-weight:400;">(avatar + thumbnail)</span></label>
+                <input type="url" id="themeUrl" class="form-input" placeholder="https://i.imgur.com/..." oninput="debounceThemeUpdate()">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Seller name</label>
+                <input type="text" id="sellerName" class="form-input" placeholder="e.g. Timo" oninput="onProductChange(this)">
+            </div>
+
+            <!-- Products -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                <span style="font-size:.75rem;font-weight:600;color:var(--text-2);">Products</span>
+                <span id="vouch-prod-counter" style="font-size:.7rem;color:rgba(255,255,255,.3);font-family:'Space Mono',monospace;">1 / 1</span>
+            </div>
+            <div id="productsContainer">
+                <div class="product-entry" data-index="0">
+                    <div class="product-entry-grid">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label">Product type</label>
+                            <select class="form-select productType" onchange="onProductChange(this)">
+                                <option>Currency</option><option>Accounts</option><option>Items / Skins</option><option>Services / Boosting</option><option>Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label">Product details</label>
+                            <input type="text" class="form-input productDetails" placeholder="e.g. V-Bucks, $50 OG" oninput="onProductChange(this)">
+                        </div>
+                    </div>
+                    <button type="button" class="remove-btn" onclick="removeProduct(event)"><i class="fas fa-times"></i> Remove</button>
+                </div>
+            </div>
+            <button type="button" id="vouch-add-product-btn" class="btn btn-secondary" onclick="vouchAddProduct()" style="width:100%;margin-bottom:18px;"><i class="fas fa-plus" style="font-size:.75rem;"></i> Add product</button>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label">Vouch count <span style="color:var(--text-3);font-weight:400;">(1–50)</span></label>
+                    <input type="number" id="vouchCount" class="form-input" min="1" max="50" value="5" oninput="updateVouchCost()">
+                    <div class="form-hint">Cost: <strong id="vouchCostVal" style="color:var(--text)">5</strong> tokens</div>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label">Starting number</label>
+                    <input type="number" id="startVouchNum" class="form-input" value="1" min="1">
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-success btn-block" onclick="startVoucher()" id="vouchSubmitBtn" disabled><i class="fas fa-paper-plane" style="font-size:0.75rem;"></i> Send vouches</button>
+            </div>
+            <div id="vouchStatus"></div>
+        </div>
+
+        <!-- Preview -->
+        <div class="card" style="margin-bottom:0;">
+            <div class="card-title">Preview</div>
+            <div class="card-desc">Live Discord embed preview.</div>
+            <div id="vouchPreview" class="discord-preview-wrap">
+                <div style="color:var(--text-3);font-size:0.8125rem;padding:40px 0;text-align:center;">Fill in the form to see a preview</div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+var VOUCH_MAX_COUNT = 50;
+var VOUCH_MAX_PRODS = 5;
+var currentTokens = 999; // Simulated token balance — replace with real fetch
+
+var webhookValidationVouch = { webhook1: false, webhook2: false };
+var embedColor = '#5865F2';
+var debounceTimers = {};
+var lastFocusedProductIndex = -1;
+
+// ── Review text generator ──
+var reviewParts = {
+  Currency: {
+    openers: ["bought {product} off {seller}", "got {product} from {seller}", "copped {product} off {seller}", "grabbed {product} from {seller}", "fed with {seller} for {product}"],
+    middles: ["went smooth", "was fast af", "came thru quick", "was easy", "hit quick"],
+    endings: ["+vouch solid seller", "+rep would buy agian", "no issuse at all", "good rates too", "10/10 would cop agian"]
+  },
+  Accounts: {
+    openers: ["bought {product} acc off {seller}", "got {product} acc from {seller}", "copped {product} acc off {seller}"],
+    middles: ["works perfectly fine", "logged in no issuse", "clean no flags so far"],
+    endings: ["+vouch clean acc", "+rep solid seller", "would buy agian"]
+  },
+  "Items / Skins": {
+    openers: ["traded {seller} for {product}", "got {product} from {seller}", "bought {product} skin off {seller}"],
+    middles: ["trade went smooth", "fast and clean", "no revoke so far"],
+    endings: ["+vouch legit seller", "+rep clean trade", "would trade agian"]
+  },
+  "Services / Boosting": {
+    openers: ["hired {seller} for {product}", "paid {seller} for {product}", "got {product} done by {seller}"],
+    middles: ["fast no ban", "quick and stealth", "done overnite no issues"],
+    endings: ["+vouch would hire agian", "+rep solid service", "would use agian fr"]
+  },
+  Other: {
+    openers: ["dealt with {seller} for {product}", "bought {product} off {seller}", "got {product} from {seller}"],
+    middles: ["went smooth", "was fast and easy", "came thru quick"],
+    endings: ["+vouch solid seller", "+rep would buy agian", "legit seller +rep"]
+  }
+};
+
+function buildReview(pType, seller, product) {
+  var parts = reviewParts[pType] || reviewParts.Other;
+  var opener = parts.openers[Math.floor(Math.random() * parts.openers.length)];
+  var middle = parts.middles[Math.floor(Math.random() * parts.middles.length)];
+  var ending = parts.endings[Math.floor(Math.random() * parts.endings.length)];
+  return (opener + ' ' + middle + ' ' + ending).replace(/{product}/g, product || 'the product').replace(/{seller}/g, seller || 'seller');
+}
+
+function escHtml(s) {
+  var d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ── Token functions ──
+function updateTokenDisplay(newCount) {
+  currentTokens = newCount;
+  var pill = document.getElementById('pointsPill');
+  var pv = document.getElementById('ptsVal');
+  if (pv) pv.textContent = newCount;
+  if (pill) {
+    pill.classList.remove('zero-pts', 'low-pts');
+    if (newCount === 0) pill.classList.add('zero-pts');
+    else if (newCount <= 5) pill.classList.add('low-pts');
+  }
+}
+
+function deductTokens(amount, reason) {
+  if (currentTokens < amount) return false;
+  currentTokens -= amount;
+  updateTokenDisplay(currentTokens);
+  return true;
+}
+
+function showDeductToast(amount) {
+  var toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;top:20px;right:20px;background:var(--warning);color:#09090b;padding:10px 16px;border-radius:8px;font-weight:600;font-size:0.875rem;z-index:9999;display:flex;align-items:center;gap:8px;opacity:0;transition:opacity 0.4s;box-shadow:0 4px 20px rgba(245,158,11,0.3);';
+  toast.innerHTML = '<i class="fas fa-minus-circle"></i> -' + amount + ' tokens used';
+  document.body.appendChild(toast);
+  setTimeout(function() { toast.style.opacity = '1'; }, 50);
+  setTimeout(function() { toast.style.opacity = '0'; setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 500); }, 3000);
+}
+
+function shakeAndPromptTopup(triggerEl) {
+  var pill = document.getElementById('pointsPill');
+  if (pill) { pill.style.animation = 'none'; void pill.offsetWidth; pill.style.animation = 'tokenShake 0.5s ease'; setTimeout(function() { pill.style.animation = ''; }, 600); }
+  if (triggerEl) { triggerEl.style.animation = 'none'; void triggerEl.offsetWidth; triggerEl.style.animation = 'tokenShake 0.5s ease'; setTimeout(function() { triggerEl.style.animation = ''; }, 600); }
+  showStatus('Not enough tokens. Deposit more.','vouchStatus','error');
+}
+
+// ── Cost calculation ──
+function updateVouchCost() {
+  var el = document.getElementById('vouchCostVal');
+  if (el) el.textContent = calculateVouchCost();
+}
+
+function calculateVouchCost() {
+  var count = parseInt((document.getElementById('vouchCount') || {}).value) || 1;
+  if (count < 1) count = 1;
+  var entries = document.querySelectorAll('#productsContainer .product-entry').length;
+  var base = (count <= 5) ? 2 : 2 + Math.ceil((count - 5) * 0.6);
+  var cost = base;
+  if (entries > 1) cost += (entries - 1) * 1.5;
+  var theme = ((document.getElementById('themeUrl') || {}).value || '').trim();
+  if (theme) cost += 1 + Math.ceil(count * 0.1);
+  return Math.max(1, Math.ceil(cost));
+}
+
+// ── Products ──
+function updateProdCounter() {
+  var entries = document.querySelectorAll('#productsContainer .product-entry');
+  var counter = document.getElementById('vouch-prod-counter');
+  var count = entries.length;
+  if (counter) counter.textContent = count + ' / ' + VOUCH_MAX_PRODS;
+  updateVouchCost();
+}
+
+function vouchAddProduct() {
+  var entries = document.querySelectorAll('#productsContainer .product-entry');
+  if (entries.length >= VOUCH_MAX_PRODS) {
+    showStatus('Max products reached (' + VOUCH_MAX_PRODS + ').','vouchStatus','error');
+    return;
+  }
+  addProduct();
+  updateProdCounter();
+}
+
+function addProduct() {
+  var c = document.getElementById('productsContainer');
+  if (!c) return;
+  var d = document.createElement('div');
+  d.className = 'product-entry';
+  d.innerHTML = '<div class="product-entry-grid"><div class="form-group" style="margin-bottom:0;"><label class="form-label">Product type</label><select class="form-select productType" onchange="onProductChange(this)"><option>Currency</option><option>Accounts</option><option>Items / Skins</option><option>Services / Boosting</option><option>Other</option></select></div><div class="form-group" style="margin-bottom:0;"><label class="form-label">Product details</label><input type="text" class="form-input productDetails" placeholder="e.g. V-Bucks" oninput="onProductChange(this);"></div></div><button type="button" class="remove-btn" onclick="removeProduct(event)"><i class="fas fa-times"></i> Remove</button>';
+  c.appendChild(d);
+  lastFocusedProductIndex = c.querySelectorAll('.product-entry').length - 1;
+  updateVouchPreview();
+}
+
+function removeProduct(e) {
+  var entries = Array.from(document.querySelectorAll('#productsContainer .product-entry'));
+  var entry = e.target.closest('.product-entry');
+  var removedIdx = entries.indexOf(entry);
+  entry.remove();
+  var remaining = document.querySelectorAll('#productsContainer .product-entry').length;
+  if (remaining === 0) lastFocusedProductIndex = -1;
+  else if (lastFocusedProductIndex >= removedIdx) lastFocusedProductIndex = Math.max(0, lastFocusedProductIndex - 1);
+  updateProdCounter();
+  updateVouchPreview();
+}
+
+function onProductChange(el) {
+  var entries = Array.from(document.querySelectorAll('#productsContainer .product-entry'));
+  var entry = el.closest('.product-entry');
+  var idx = entries.indexOf(entry);
+  if (idx !== -1) lastFocusedProductIndex = idx;
+  updateVouchPreview();
+  updateVouchCost();
+}
+
+// ── Webhook validation ──
+function extractWebhookId(url) {
+  var m = url.match(/\/webhooks\/(\d+)\//);
+  return m ? m[1] : null;
+}
+
+function setWHChecker(num, msg, state) {
+  state = state || '';
+  var checker = document.getElementById('webhook' + num + 'Checker');
+  if (!checker) return;
+  checker.querySelector('.wh-dot').className = 'wh-dot ' + state;
+  checker.querySelector('span:last-child').textContent = msg;
+}
+
+function updateVouchBtn() {
+  var btn = document.getElementById('vouchSubmitBtn');
+  if (btn) btn.disabled = !(webhookValidationVouch.webhook1 && webhookValidationVouch.webhook2);
+}
+
+function validateWebhook(url) {
+  return fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: 'Cordly Validator', avatar_url: 'https://cordly.pro/logo.webp', embeds: [{ title: 'Webhook validation', description: 'Automated validation test.', color: 0x5b6cf9 }] })
+  }).then(function(r) { return r.status; }).catch(function() { return 0; });
+}
+
+function checkVouchWebhook(num) {
+  var urlEl = document.getElementById('webhook' + num),
+    url = urlEl ? urlEl.value.trim() : '';
+  if (!url) { setWHChecker(num, 'Not checked');
+    webhookValidationVouch['webhook' + num] = false;
+    updateVouchBtn(); return; }
+  setWHChecker(num, 'Checking…', 'checking');
+  validateWebhook(url).then(function(status) {
+    var ok = status === 200 || status === 204 || status === 429,
+      other = num === 1 ? 2 : 1;
+    var otherUrl = (document.getElementById('webhook' + other) || {}).value || '';
+    if (ok && otherUrl && (url === otherUrl || extractWebhookId(url) === extractWebhookId(otherUrl))) {
+      setWHChecker(num, 'Duplicate webhook', 'invalid');
+      webhookValidationVouch['webhook' + num] = false;
+    } else {
+      setWHChecker(num, ok ? 'Valid ✓ (ensure same channel)' : 'Invalid (' + status + ')', ok ? 'valid' : 'invalid');
+      webhookValidationVouch['webhook' + num] = ok;
+    }
+    updateVouchBtn();
+  });
+}
+
+// ── Theme / color extraction ──
+function debounceThemeUpdate() {
+  clearTimeout(debounceTimers.theme);
+  debounceTimers.theme = setTimeout(function() {
+    var el = document.getElementById('themeUrl');
+    extractDominantColor(el ? el.value.trim() : '');
+    updateVouchCost();
+  }, 350);
+}
+
+function extractDominantColor(url) {
+  if (!url) { embedColor = '#5865F2';
+    updateVouchPreview(); return; }
+  // Simulated — in production you'd use a proxy
+  embedColor = '#5865F2';
+  updateVouchPreview();
+}
+
+// ── Preview ──
+function updateVouchPreview() {
+  var previewEl = document.getElementById('vouchPreview');
+  if (!previewEl) return;
+  var username = (document.getElementById('vouchUsername') || {}).value || 'Vouchy';
+  var theme = ((document.getElementById('themeUrl') || {}).value || '').trim();
+  var seller = (document.getElementById('sellerName') || {}).value || 'Seller';
+  var startNum = (document.getElementById('startVouchNum') || {}).value || '1';
+  var entries = Array.from(document.querySelectorAll('#productsContainer .product-entry'));
+  var focusIdx = lastFocusedProductIndex < 0 || lastFocusedProductIndex >= entries.length ? entries.length - 1 : lastFocusedProductIndex;
+  var entry = entries[focusIdx] || entries[0];
+  var pType = (entry && entry.querySelector('.productType')) || {};
+  pType = pType.value || 'Other';
+  var pDet = (entry && entry.querySelector('.productDetails')) || {};
+  pDet = pDet.value || '';
+  var pText = pDet ? (pType + ' — ' + pDet) : pType;
+  var review = buildReview(pType, seller, pDet);
+  var bc = embedColor || '#5865F2';
+  var rid = Math.floor(1e17 + Math.random() * 8e17).toString();
+  var titlePreview = '✪ New Vouch #' + escHtml(startNum) + ' ✪';
+
+  previewEl.innerHTML = '<div class="dc-msg"><div class="dc-avatar">' + (theme ? '<img src="' + escHtml(theme) + '" alt="">' : '&nbsp;') + '</div><div style="flex:1;"><div class="dc-username">' + escHtml(username) + ' <span class="dc-badge">BOT</span></div><div class="dc-embed" style="border-left-color:' + bc + ';"><div class="dc-embed-content"><div class="dc-embed-title">' + titlePreview + '</div><div><div class="dc-field-name">Product</div><div class="dc-field-val">' + escHtml(pText) + '</div></div><div><div class="dc-field-name">Voucher</div><div class="dc-field-val"><span class="dc-mention">&lt;@' + rid + '&gt;</span></div></div><div><div class="dc-field-name">Rating</div><div class="dc-field-val">★★★★★</div></div><div><div class="dc-field-name">Review</div><div class="dc-field-val">' + escHtml(review) + '</div></div></div>' + (theme ? '<img class="dc-embed-thumb" src="' + escHtml(theme) + '" alt="">' : '') + '</div></div></div>';
+}
+
+// ── Status helper ──
+function showStatus(msg, id, type) {
+  var icons = { error: 'exclamation-circle', success: 'check-circle', warning: 'info-circle' };
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = '<div class="status-msg ' + type + '"><i class="fas fa-' + (icons[type] || 'info-circle') + '"></i>' + msg + '</div>';
+  setTimeout(function() { var e = document.getElementById(id); if (e) e.innerHTML = ''; }, 6000);
+}
+
+// ── Main send function ──
+async function startVoucher() {
+  var w1 = ((document.getElementById('webhook1') || {}).value || '').trim();
+  var w2 = ((document.getElementById('webhook2') || {}).value || '').trim();
+  if (!w1 || !w2) { showStatus('Both webhooks required.', 'vouchStatus', 'error'); return; }
+  if (w1 === w2 || extractWebhookId(w1) === extractWebhookId(w2)) { showStatus('Cannot use the same webhook twice.', 'vouchStatus', 'error'); return; }
+  if (!webhookValidationVouch.webhook1 || !webhookValidationVouch.webhook2) { showStatus('Both webhooks must be valid first.', 'vouchStatus', 'error'); return; }
+
+  var count = parseInt((document.getElementById('vouchCount') || {}).value) || 1;
+  var tokenCost = calculateVouchCost();
+
+  // Simulated token check — replace with real backend call
+  if (currentTokens < tokenCost) {
+    shakeAndPromptTopup(document.getElementById('vouchSubmitBtn'));
+    return;
+  }
+  deductTokens(tokenCost, 'vouch_sender');
+  showDeductToast(tokenCost);
+
+  var startN = parseInt((document.getElementById('startVouchNum') || {}).value) || 1;
+  var username = (document.getElementById('vouchUsername') || {}).value || 'Vouchy';
+  var seller = (document.getElementById('sellerName') || {}).value || 'Seller';
+  var theme = ((document.getElementById('themeUrl') || {}).value || '').trim();
+  var entries = Array.from(document.querySelectorAll('.product-entry'));
+  var hooks = [w1, w2];
+
+  showStatus('Sending ' + count + ' vouches…', 'vouchStatus', 'warning');
+  var sent = 0;
+
+  for (var i = 0; i < count; i++) {
+    var hook = hooks[i % 2];
+    var entryItem = entries[i % entries.length];
+    var pType2 = (entryItem && entryItem.querySelector('.productType')) || {};
+    pType2 = pType2.value || 'Other';
+    var pDet2 = (entryItem && entryItem.querySelector('.productDetails')) || {};
+    pDet2 = pDet2.value || '';
+    var pText2 = pDet2 ? (pType2 + ' — ' + pDet2) : pType2;
+    var review2 = buildReview(pType2, seller, pDet2);
+    var color2 = parseInt((embedColor || '#5865F2').replace('#', ''), 16);
+    var titleText = '✪ New Vouch #' + (startN + i) + ' ✪';
+
+    var payload2 = {
+      username: username,
+      avatar_url: theme || undefined,
+      embeds: [{
+        title: titleText,
+        color: color2,
+        thumbnail: theme ? { url: theme } : undefined,
+        fields: [
+          { name: '**Product**', value: pText2, inline: false },
+          { name: '**Voucher**', value: '<@' + String(Math.floor(1e18 + Math.random() * 9e18)) + '>', inline: false },
+          { name: '**Rating**', value: '★★★★★', inline: false },
+          { name: '**Review**', value: review2, inline: false }
+        ]
+      }]
+    };
+
+    try {
+      var rv = await fetch(hook, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload2)
+      });
+      if (rv.ok || rv.status === 204) sent++;
+    } catch (e) {}
+    await new Promise(function(res) { setTimeout(res, 500); });
+  }
+
+  showStatus('Done — ' + sent + '/' + count + ' vouches sent.', 'vouchStatus', 'success');
+}
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', function() {
+  updateVouchPreview();
+  updateProdCounter();
+  updateVouchCost();
+  updateTokenDisplay(999); // Simulated balance
+});
+</script>
+
+</body>
+</html>
